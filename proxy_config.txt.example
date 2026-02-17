@@ -1,0 +1,59 @@
+# Proxy Configuration Example
+
+# Copy this file to proxy_config.txt and modify the settings
+
+# Proxy configuration example file
+
+# Copy this file to proxy_config.txt and modify the configuration
+
+# Enable or disable proxy (1 = enabled, 0 = disabled)
+
+# Enable or disable proxy (1 = enabled, 0 = disabled)
+
+PROXY_ENABLED=0
+
+# Proxy server URL
+
+# Proxy server URL
+
+#
+# Supported formats:
+
+# - HTTP: http://127.0.0.1:7890
+
+# - HTTPS: https://proxy.example.com:8080
+
+# - SOCKS5: socks5://127.0.0.1:1080
+
+#
+# With authentication:
+
+# - http://username:password@proxy.example.com:8080
+
+#
+# Common proxy ports:
+
+# - Clash: 7890
+
+# - V2Ray: 1080 (SOCKS5) or 10809 (HTTP)
+# - Shadowsocks: 1080
+#
+PROXY_URL=
+
+# Examples / Example configuration:
+# ========================================
+# Example 1: Local Clash proxy
+# PROXY_ENABLED=1
+# PROXY_URL=http://127.0.0.1:7890
+
+# Example 2: Local V2Ray SOCKS5 proxy
+# PROXY_ENABLED=1
+# PROXY_URL=socks5://127.0.0.1:1080
+
+# Example 3: Corporate proxy with authentication
+# PROXY_ENABLED=1
+# PROXY_URL=http://username:password@proxy.company.com:8080
+
+# Example 4: No proxy (direct connection)
+# PROXY_ENABLED=0
+# PROXY_URL=

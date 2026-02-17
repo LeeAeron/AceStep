@@ -5,7 +5,7 @@
     <img src="./assets/acestudio_logo.png" width="100%" alt="AceStep Logo">
 </p>
 
-![AceStep](img/AceStep.png)
+![AceStep](assets/AceStep.png)
 
 [![Release](https://img.shields.io/github/release/LeeAeron/AceStep.svg)](https://github.com/LeeAeron/AceStep/releases/latest)
 

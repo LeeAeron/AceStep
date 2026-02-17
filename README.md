@@ -91,7 +91,7 @@ This project provided with only *.bat installer/re-installer/starter/updater fil
 - As main prooject developing very fast, there will be some time time lag in updates here, sorry guys.
 
 
-### 💡 Which Model Should I Choose?
+## 💡 Which Model Should I Choose?
 
 | Your GPU VRAM | Recommended LM Model | Backend | Notes |
 |---------------|---------------------|---------|-------|

@@ -3921,7 +3921,7 @@ class LLMHandler:
                 self._hf_model_for_scoring = AutoModelForCausalLM.from_pretrained(
                     model_path,
                     trust_remote_code=True,
-                    torch_dtype=self.dtype
+                    dtype=self.dtype
                 )
                 load_time = time.time() - start_time
                 logger.info(f"HuggingFace model loaded in {load_time:.2f}s")
@@ -3956,7 +3956,7 @@ class LLMHandler:
                 self._hf_model_for_scoring = AutoModelForCausalLM.from_pretrained(
                     model_path,
                     trust_remote_code=True,
-                    torch_dtype=self.dtype
+                    dtype=self.dtype
                 )
                 load_time = time.time() - start_time
                 logger.info(f"HuggingFace model loaded in {load_time:.2f}s")

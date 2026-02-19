@@ -465,6 +465,9 @@ def setup_event_handlers(demo, dit_handler, llm_handler, dataset_handler, datase
             generation_section["timesig_auto"],
             generation_section["vocal_lang_auto"],
             generation_section["duration_auto"],
+            # State-leakage fix: clear stale values on mode switch (indices 42-43)
+            generation_section["text2music_audio_code_string"],
+            generation_section["src_audio"],
         ]
     )
     
@@ -731,6 +734,9 @@ def setup_event_handlers(demo, dit_handler, llm_handler, dataset_handler, datase
         generation_section["timesig_auto"],
         generation_section["vocal_lang_auto"],
         generation_section["duration_auto"],
+        # State-leakage fix: clear stale values on mode switch (indices 42-43)
+        generation_section["text2music_audio_code_string"],
+        generation_section["src_audio"],
     ]
     for btn_idx in range(1, 9):
         results_section[f"send_to_remix_btn_{btn_idx}"].click(

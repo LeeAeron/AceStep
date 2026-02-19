@@ -151,9 +151,10 @@ def _create_service_config_content(dit_handler, llm_handler, defaults, init_para
                     choices=dit_handler.get_available_checkpoints(),
                     value=checkpoint_value,
                     info=t("service.checkpoint_info"), elem_classes=["has-info-container"],
+                    visible=False,
                 )
             with gr.Column(scale=1, min_width=90):
-                refresh_btn = gr.Button(t("service.refresh_btn"), size="sm")
+                refresh_btn = gr.Button(t("service.refresh_btn"), size="sm", visible=False)
 
         # Model and device
         with gr.Row():

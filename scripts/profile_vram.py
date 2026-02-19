@@ -383,7 +383,7 @@ def profile_lm(checkpoint_dir: str, lm_models: Optional[List[str]] = None) -> Di
         print(f"    Loading model weights...")
         model = AutoModelForCausalLM.from_pretrained(
             lm_path,
-            torch_dtype=torch.bfloat16,
+            dtype=torch.bfloat16,
             trust_remote_code=True,
         )
         model = model.to("cuda")

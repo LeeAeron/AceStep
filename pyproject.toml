@@ -1,6 +1,6 @@
 [project]
 name = "ace-step"
-version = "1.5.0.3"
+version = "1.5.0.4"
 description = "ACE-Step 1.5"
 readme = "README.md"
 requires-python = "==3.11.*"

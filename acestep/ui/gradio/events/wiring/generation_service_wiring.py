@@ -89,7 +89,6 @@ def register_generation_service_handlers(
             generation_section["offload_dit_to_cpu_checkbox"],
             generation_section["compile_model_checkbox"],
             generation_section["quantization_checkbox"],
-            generation_section["mlx_dit_checkbox"],
             generation_section["generation_mode"],
             generation_section["batch_size_input"],
         ],

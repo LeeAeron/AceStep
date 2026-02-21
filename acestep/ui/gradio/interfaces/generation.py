@@ -169,7 +169,7 @@ def _create_service_config_content(dit_handler, llm_handler, defaults, init_para
             )
             device_value = init_params.get('device', 'auto') if service_pre_initialized else 'auto'
             device = gr.Dropdown(
-                choices=["auto", "cuda", "mps", "xpu", "cpu"],
+                choices=["cuda", "cpu"],
                 value=device_value,
                 label=t("service.device_label"),
                 info=t("service.device_info"), elem_classes=["has-info-container"],

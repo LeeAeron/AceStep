@@ -83,9 +83,10 @@ def build_checkpoint_controls(dit_handler: Any, service_pre_initialized: bool, p
                 value=params.get("checkpoint") if service_pre_initialized else None,
                 info=t("service.checkpoint_info"),
                 elem_classes=["has-info-container"],
+                visible=False
             )
         with gr.Column(scale=1, min_width=90):
-            refresh_btn = gr.Button(t("service.refresh_btn"), size="sm")
+            refresh_btn = gr.Button(t("service.refresh_btn"), size="sm", visible=False)
     return {"checkpoint_dropdown": checkpoint_dropdown, "refresh_btn": refresh_btn}
 
 

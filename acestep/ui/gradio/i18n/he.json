@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "🎛️ סביבת העבודה ACE-Step V1.5 Playground💡",
+    "title": "🎛️ ACE-Step V1.5 Portable",
     "subtitle": "פורצים את גבולות יצירת המוזיקה בקוד פתוח"
   },
   "common": {
@@ -88,7 +88,7 @@
     "source_audio": "אודיו מקור",
     "convert_codes_btn": "המר לקודים",
     "analyze_btn": "🔍 ניתוח",
-    "sample_btn": "🎲 לחץ כאן",
+    "sample_btn": "🎲 דוגמה אקראית להנחיה",
     "lm_codes_hints": "🎼 רמזי קודי LM",
     "lm_codes_label": "רמזי קודי LM",
     "lm_codes_placeholder": "<|audio_code_10695|><|audio_code_54246|>.",

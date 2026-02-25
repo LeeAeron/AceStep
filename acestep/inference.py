@@ -179,7 +179,7 @@ class GenerationConfig:
             - int: Single seed value (will be converted to list and padded)
         lm_batch_chunk_size: Batch chunk size for LM processing
         constrained_decoding_debug: Whether to enable constrained decoding debug
-        audio_format: Output audio format, one of "mp3", "wav", "flac", "wav32", "opus", "aac". Default: "flac"
+        audio_format: Output audio format, one of "mp3", "flac", "wav32". Default: "flac"
     """
     batch_size: int = 2
     allow_lm_batch: bool = False
@@ -635,8 +635,16 @@ def generate_music(
         # Get base params dictionary
         base_params_dict = params.to_dict()
 
-        # Save audio files using AudioSaver (format from config)
         audio_format = config.audio_format if config.audio_format else "flac"
+
+        FORMAT_MAP = {
+            "mp3": ("mp3", None),
+            "flac": ("flac", None),
+            "wav32": ("wav", "PCM_32"),
+        }
+
+        fmt, subtype = FORMAT_MAP.get(audio_format, ("wav", "PCM_16"))
+
         audio_saver = AudioSaver(default_format=audio_format)
 
         # Use handler's temp_dir for saving files

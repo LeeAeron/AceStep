@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "🎛️ ACE-Step V1.5 Playground💡",
+    "title": "🎛️ ACE-Step V1.5 Portable",
     "subtitle": "Pushing the Boundaries of Open-Source Music Generation"
   },
   "common": {
@@ -88,7 +88,7 @@
     "source_audio": "Source Audio",
     "convert_codes_btn": "Convert to Codes",
     "analyze_btn": "🔍 Analyze",
-    "sample_btn": "🎲 Click Me",
+    "sample_btn": "🎲 Random Prompt Sample",
     "lm_codes_hints": "🎼 LM Codes Hints",
     "lm_codes_label": "LM Codes Hints",
     "lm_codes_placeholder": "<|audio_code_10695|><|audio_code_54246|>.",
@@ -242,7 +242,8 @@
     "timesig_auto_label": "TimeSig Auto",
     "vocal_lang_auto_label": "Language Auto",
     "duration_auto_label": "Duration Auto",
-    "reset_all_auto": "🔄 Reset All to Auto"
+    "reset_all_auto": "🔄 Reset All to Auto",
+    "restart_btn": "🛑 RESTART ENGINE"
   },
   "results": {
     "title": "🎵 Results",

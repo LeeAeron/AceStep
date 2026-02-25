@@ -30,12 +30,9 @@ def build_output_controls(
                 choices=[
                     ("FLAC", "flac"),
                     ("MP3", "mp3"),
-                    ("Opus", "opus"),
-                    ("AAC", "aac"),
-                    ("WAV (16-bit)", "wav"),
-                    ("WAV (32-bit Float)", "wav32"),
+                    ("WAV (32-bit)", "wav32"),
                 ],
-                value="mp3",
+                value="wav32",
                 label=t("generation.audio_format_label"),
                 info=t("generation.audio_format_info"),
                 elem_classes=["has-info-container"],
@@ -44,7 +41,7 @@ def build_output_controls(
             score_scale = gr.Slider(
                 minimum=0.01,
                 maximum=1.0,
-                value=0.5,
+                value=0.01,
                 step=0.01,
                 label=t("generation.score_sensitivity_label"),
                 info=t("generation.score_sensitivity_info"),

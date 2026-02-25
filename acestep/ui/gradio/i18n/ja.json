@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "🎛️ ACE-Step V1.5 プレイグラウンド💡",
+    "title": "🎛️ ACE-Step V1.5 Portable",
     "subtitle": "オープンソース音楽生成の限界を押し広げる"
   },
   "common": {
@@ -88,7 +88,7 @@
     "source_audio": "ソースオーディオ",
     "convert_codes_btn": "コードに変換",
     "analyze_btn": "🔍 分析",
-    "sample_btn": "🎲 お試し",
+    "sample_btn": "🎲 ランダムプロンプトサンプル",
     "lm_codes_hints": "🎼 LM コードヒント",
     "lm_codes_label": "LM コードヒント",
     "lm_codes_placeholder": "<|audio_code_10695|><|audio_code_54246|>.",

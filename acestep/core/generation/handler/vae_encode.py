@@ -49,9 +49,9 @@ class VaeEncodeMixin:
                 mem_gb = self._get_effective_mps_memory_gb()
                 if mem_gb is not None:
                     gpu_memory = mem_gb
-            chunk_size = 48000 * 15 if gpu_memory <= 8 else 48000 * 30
+            chunk_size = 96000 * 15 if gpu_memory <= 8 else 96000 * 30
         if overlap is None:
-            overlap = 48000 * 2
+            overlap = 96000 * 2
 
         input_was_2d = audio.dim() == 2
         if input_was_2d:

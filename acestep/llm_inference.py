@@ -58,7 +58,7 @@ class LLMHandler:
         self.llm_initialized = False
         self.llm_backend = None
         self.max_model_len = 4096
-        self.device = "cpu"
+        self.device = "cuda"
         self.dtype = torch.float32
         self.offload_to_cpu = False
         self.disable_tqdm = os.environ.get("ACESTEP_DISABLE_TQDM", "").lower() in ("1", "true", "yes") or not (hasattr(sys.stderr, 'isatty') and sys.stderr.isatty())
@@ -3921,7 +3921,7 @@ class LLMHandler:
                 self._hf_model_for_scoring = AutoModelForCausalLM.from_pretrained(
                     model_path,
                     trust_remote_code=True,
-                    dtype=self.dtype
+                    torch_dtype=self.dtype
                 )
                 load_time = time.time() - start_time
                 logger.info(f"HuggingFace model loaded in {load_time:.2f}s")
@@ -3956,7 +3956,7 @@ class LLMHandler:
                 self._hf_model_for_scoring = AutoModelForCausalLM.from_pretrained(
                     model_path,
                     trust_remote_code=True,
-                    dtype=self.dtype
+                    torch_dtype=self.dtype
                 )
                 load_time = time.time() - start_time
                 logger.info(f"HuggingFace model loaded in {load_time:.2f}s")

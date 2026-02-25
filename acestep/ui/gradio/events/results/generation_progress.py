@@ -197,7 +197,7 @@ def generate_with_progress(
         return
 
     audios = result.audios
-    progress(0.99, "Converting audio to mp3...")
+    progress(0.99, "Converting audio...")
 
     # Clear all scores/codes/lrc displays
     clear_scores = [gr.update(value="", visible=True) for _ in range(8)]

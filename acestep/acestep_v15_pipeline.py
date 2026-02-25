@@ -65,7 +65,7 @@ def create_demo(init_params=None, language='en'):
                           'offload_to_cpu', 'offload_dit_to_cpu', 'init_status',
                           'dit_handler', 'llm_handler' (initialized handlers if pre-initialized),
                           'language' (UI language code)
-        language: UI language code ('en', 'zh', 'ja', default: 'en')
+        language: UI language code ('en', 'zh', 'ja', 'ru', default: 'en')
     
     Returns:
         Gradio Blocks instance
@@ -168,13 +168,13 @@ def main():
                        help="Enable service mode (default: False). When enabled, uses preset models and restricts UI options.")
     
     # Service initialization arguments
-    parser.add_argument("--init_service", type=lambda x: x.lower() in ['true', '1', 'yes'], default=True, help="Initialize service on startup (default: False)")
+    parser.add_argument("--init_service", type=lambda x: x.lower() in ['true', '1', 'yes'], default=True, help="Initialize service on startup (default: True)")
     parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint file path (optional, for display purposes)")
     parser.add_argument("--config_path", type=str, default=None, help="Main model path (e.g., 'acestep-v15-turbo')")
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"], help="Processing device (default: cuda)")
     parser.add_argument("--init_llm", type=lambda x: x.lower() in ['true', '1', 'yes'], default=True, help="Initialize 5Hz LM (default: auto based on GPU memory)")
     parser.add_argument("--lm_model_path", type=str, default=None, help="5Hz LM model path (e.g., 'acestep-5Hz-lm-0.6B')")
-    parser.add_argument("--backend", type=str, default="pt", choices=["vllm", "pt", "mlx"], help=f"5Hz LM backend (default: {_default_backend}, use 'mlx' for native Apple Silicon acceleration)")
+    parser.add_argument("--backend", type=str, default="pt", choices=["vllm", "pt"], help=f"5Hz LM backend (default: {_default_backend})")
     parser.add_argument("--use_flash_attention", type=lambda x: x.lower() in ['true', '1', 'yes'], default=None, help="Use flash attention (default: auto-detect)")
     parser.add_argument("--offload_to_cpu", type=lambda x: x.lower() in ['true', '1', 'yes'], default=True, help=f"Offload models to CPU (default: {'True' if auto_offload else 'False'}, auto-detected based on GPU VRAM)")
     _default_offload_dit = gpu_config.offload_dit_to_cpu_default if not _is_mac else False
@@ -461,6 +461,8 @@ def main():
             except KeyboardInterrupt:
                 print("\nShutting down...")
         else:
+            is_restart = os.environ.get("ACE_STEP_RESTARTED") == "1"
+
             app, local_url, share_url = demo.launch(
                 server_name=args.server_name,
                 server_port=args.port,
@@ -468,13 +470,14 @@ def main():
                 debug=args.debug,
                 show_error=True,
                 prevent_thread_lock=False,
-                inbrowser=True,
+                inbrowser=not is_restart,
                 auth=auth,
-                allowed_paths=allowed_paths,  # include output_dir + user-provided
+                allowed_paths=allowed_paths,
             )
-            
-            webbrowser.get("windows-default").open(local_url)
-            
+
+            if not is_restart:
+                webbrowser.get("windows-default").open(local_url)
+  
     except Exception as e:
         print(f"Error launching Gradio: {e}", file=sys.stderr)
         import traceback

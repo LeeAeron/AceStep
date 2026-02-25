@@ -1071,31 +1071,20 @@ def check_batch_size_limit(
 
 
 def is_lm_model_supported(model_path: str, gpu_config: GPUConfig) -> Tuple[bool, str]:
-    """
-    Check if the specified LM model is supported for current GPU configuration.
-    
-    Args:
-        model_path: LM model path
-        gpu_config: Current GPU configuration
-        
-    Returns:
-        Tuple of (is_supported, warning_message)
-    """
     if not gpu_config.available_lm_models:
         return False, (
             f"⚠️ Your GPU ({gpu_config.gpu_memory_gb:.1f}GB) does not have enough memory "
             f"to run any LM model. Please disable LM initialization."
         )
-    
+
     model_size = get_lm_model_size(model_path)
-    
-    # Check if model size is in available models
+
     for available_model in gpu_config.available_lm_models:
         if model_size in available_model:
             return True, ""
-    
-    return False, (
-        f"⚠️ LM model {model_path} ({model_size}) is not supported for your GPU "
+
+    return True, (
+        f"⚠️ LM model {model_path} ({model_size}) may not be optimal for your GPU "
         f"({gpu_config.gpu_memory_gb:.1f}GB). Available models: {', '.join(gpu_config.available_lm_models)}"
     )
 

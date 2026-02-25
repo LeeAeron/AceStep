@@ -62,22 +62,23 @@ def normalize_audio(audio_data: Union[torch.Tensor, np.ndarray], target_db: floa
     return audio
 
 
+import soundfile as sf
 
 class AudioSaver:
     """Audio saving and transcoding utility class"""
-    
-    def __init__(self, default_format: str = "flac"):
+
+    def __init__(self, default_format: str = "wav32"):
         """
         Initialize audio saver
-        
+
         Args:
-            default_format: Default save format ('flac', 'wav', 'mp3', 'wav32', 'opus', 'aac')
+            default_format: Default save format ('flac', 'mp3', 'wav32')
         """
         self.default_format = default_format.lower()
-        if self.default_format not in ["flac", "wav", "mp3", "wav32", "opus", "aac"]:
-            logger.warning(f"Unsupported format {default_format}, using 'flac'")
-            self.default_format = "flac"
-    
+        if self.default_format not in ["flac", "mp3", "wav32"]:
+            logger.warning(f"Unsupported format {default_format}, using 'wav32'")
+            self.default_format = "wav32"
+
     def save_audio(
         self,
         audio_data: Union[torch.Tensor, np.ndarray],
@@ -88,122 +89,45 @@ class AudioSaver:
     ) -> str:
         """
         Save audio data to file
-        
-        Args:
-            audio_data: Audio data, torch.Tensor [channels, samples] or numpy.ndarray
-            output_path: Output file path (extension can be omitted)
-            sample_rate: Sample rate
-            format: Audio format ('flac', 'wav', 'mp3', 'wav32', 'opus', 'aac'), defaults to default_format
-            channels_first: If True, tensor format is [channels, samples], else [samples, channels]
-        
-        Returns:
-            Actual saved file path
         """
         format = (format or self.default_format).lower()
-        if format not in ["flac", "wav", "mp3", "wav32", "opus", "aac"]:
-            logger.warning(f"Unsupported format {format}, using {self.default_format}")
-            format = self.default_format
-        
-        # Ensure output path has correct extension
         output_path = Path(output_path)
-        
-        # Determine extension based on format
-        ext = ".wav" if format == "wav32" else f".{format}"
-        
-        if output_path.suffix.lower() not in ['.flac', '.wav', '.mp3', '.opus', '.aac', '.m4a']:
-            output_path = output_path.with_suffix(ext)
-        elif format == "wav32" and output_path.suffix.lower() == ".wav32":
-             # Explicitly fix .wav32 extension if present
-             output_path = output_path.with_suffix(".wav")
-        elif format == "aac" and output_path.suffix.lower() == ".m4a":
-             # Allow .m4a as valid extension for AAC (it's a container format for AAC)
-             pass
-        
+
         # Convert to torch tensor
         if isinstance(audio_data, np.ndarray):
-            if channels_first:
-                # numpy already [channels, samples]
-                audio_tensor = torch.from_numpy(audio_data).float()
-            else:
-                # numpy [samples, channels] -> tensor [samples, channels] -> [channels, samples] (if transposed)
-                audio_tensor = torch.from_numpy(audio_data).float()
-                if audio_tensor.dim() == 2 and audio_tensor.shape[0] > audio_tensor.shape[1]:
-                     # Assume [samples, channels] if dim0 > dim1 (heuristic)
-                     audio_tensor = audio_tensor.T
+            audio_tensor = torch.from_numpy(audio_data).float()
         else:
-            # torch tensor
             audio_tensor = audio_data.cpu().float()
-            if not channels_first and audio_tensor.dim() == 2:
-                # [samples, channels] -> [channels, samples]
-                if audio_tensor.shape[0] > audio_tensor.shape[1]:
-                    audio_tensor = audio_tensor.T
-        
-        # Ensure memory is contiguous
-        audio_tensor = audio_tensor.contiguous()
-        
-        # Select backend and save
-        try:
-            if format in ["mp3", "opus", "aac"]:
-                # MP3, Opus, and AAC use ffmpeg backend
-                torchaudio.save(
-                    str(output_path),
-                    audio_tensor,
-                    sample_rate,
-                    channels_first=True,
-                    backend='ffmpeg',
-                )
-            elif format in ["flac", "wav", "wav32"]:
-                # FLAC and WAV use soundfile backend (fastest)
-                # handle 32-bit float wav
-                if format == "wav32":
-                    try:
-                        import soundfile as sf
-                        
-                        # Use soundfile directly for 32-bit float
-                        audio_np = audio_tensor.transpose(0, 1).numpy() # [channels, samples] -> [samples, channels]
-                        
-                        # Explicitly specify format as WAV to avoid issues with extension detection or custom extensions
-                        sf.write(str(output_path), audio_np, sample_rate, subtype='FLOAT', format='WAV')
-                        logger.debug(f"[AudioSaver] Saved audio to {output_path} (wav32, {sample_rate}Hz)")
-                        return str(output_path)
-                    except Exception as e:
-                        logger.error(f"Failed to save wav32: {e}, falling back to standard wav")
-                        format = "wav"
-                        # Fallthrough to standard wav saving
 
+        audio_tensor = audio_tensor.contiguous()
+
+        try:
+            # --- WAV32 PCM_32 через soundfile ---
+            if format == "wav32":
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(str(output_path), audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Saved audio to {output_path} (wav32 PCM_32, {sample_rate}Hz)")
+                return str(output_path)
+
+            # --- FLAC / MP3 через torchaudio+soundfile ---
+            if format in ["flac", "mp3"]:
                 torchaudio.save(
                     str(output_path),
                     audio_tensor,
                     sample_rate,
                     channels_first=True,
-                    backend='soundfile',
+                    backend="soundfile",
                 )
-            else:
-                # Other formats use default backend
-                torchaudio.save(
-                    str(output_path),
-                    audio_tensor,
-                    sample_rate,
-                    channels_first=True,
-                )
-            
-            logger.debug(f"[AudioSaver] Saved audio to {output_path} ({format}, {sample_rate}Hz)")
-            return str(output_path)
-            
+                logger.debug(f"[AudioSaver] Saved audio to {output_path} ({format}, {sample_rate}Hz)")
+                return str(output_path)
+
         except Exception as e:
             try:
-                import soundfile as sf
-                audio_np = audio_tensor.transpose(0, 1).numpy()  # -> [samples, channels]
-                
-                # Handle wav32 fallback formatting
+                audio_np = audio_tensor.transpose(0, 1).numpy()
                 if format == "wav32":
-                    sf_format = "WAV"
-                    subtype = "FLOAT"
+                    sf.write(str(output_path), audio_np, sample_rate, format="WAV", subtype="PCM_32")
                 else:
-                    sf_format = format.upper()
-                    subtype = None
-                    
-                sf.write(str(output_path), audio_np, sample_rate, format=sf_format, subtype=subtype)
+                    sf.write(str(output_path), audio_np, sample_rate, format=format.upper())
                 logger.debug(f"[AudioSaver] Fallback soundfile Saved audio to {output_path} ({format}, {sample_rate}Hz)")
                 return str(output_path)
             except Exception as inner_e:
@@ -223,7 +147,7 @@ class AudioSaver:
         Args:
             input_path: Input audio file path
             output_path: Output audio file path
-            output_format: Target format ('flac', 'wav', 'mp3', 'wav32', 'opus', 'aac')
+            output_format: Target format ('flac', 'mp3', 'wav32')
             remove_input: Whether to delete input file
         
         Returns:

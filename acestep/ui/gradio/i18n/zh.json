@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "🎛️ ACE-Step V1.5 演练场💡",
+    "title": "🎛️ ACE-Step V1.5 Portable",
     "subtitle": "推动开源音乐生成的边界"
   },
   "common": {
@@ -88,7 +88,7 @@
     "source_audio": "源音频",
     "convert_codes_btn": "转换为代码",
     "analyze_btn": "🔍 分析",
-    "sample_btn": "🎲 试试看",
+    "sample_btn": "🎲 提示的随机示例",
     "lm_codes_hints": "🎼 LM 代码提示",
     "lm_codes_label": "LM 代码提示",
     "lm_codes_placeholder": "<|audio_code_10695|><|audio_code_54246|>.",

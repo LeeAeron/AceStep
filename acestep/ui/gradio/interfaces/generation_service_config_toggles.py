@@ -51,8 +51,9 @@ def build_service_toggles(
             lm_info_text += " " + t("service.lm_unavailable_vram")
         init_llm_checkbox = gr.Checkbox(
             label=t("service.init_llm_label"),
-            value=params.get("init_llm", init_lm_default) if service_pre_initialized else init_lm_default,
+            value=params.get("init_llm", gpu_config.force_lm_enabled if hasattr(gpu_config, "force_lm_enabled") else init_lm_default),
             info=lm_info_text,
+            interactive=True,
         )
 
         flash_attn_available = dit_handler.is_flash_attention_available(device_value)

@@ -103,7 +103,7 @@ class AceStepHandler(
         """Initialize runtime model handles, feature flags, and generation state."""
         self.model = None
         self.config = None
-        self.device = "cpu"
+        self.device = "cuda"
         self.dtype = torch.float32  # Will be set based on device in initialize_service
 
         # VAE for audio encoding/decoding

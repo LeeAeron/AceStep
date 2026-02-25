@@ -113,7 +113,7 @@ def get_model_type_ui_settings(is_turbo: bool, current_mode: str = None, is_pure
         mode_update = gr.update(choices=new_choices, value=current_mode)
     else:
         mode_update = gr.update(choices=new_choices)
-    init_llm_update = gr.update(value=False) if is_pure_base else gr.update()
+    init_llm_update = gr.update()
     return (
         gr.update(
             value=cfg["inference_steps_value"],

@@ -511,13 +511,13 @@ class GenerateMusicRequest(BaseModel):
 
     audio_format: str = Field(
         default="wav32",
-        description="Output audio format. Supported formats: 'flac', 'mp3', 'opus', 'aac', 'wav', 'wav32'. Default: 'mp3'"
+        description="Output audio format. Supported formats: 'flac', 'mp3', 'wav32'. Default: 'wav32'"
     )
     use_tiled_decode: bool = True
 
     # 5Hz LM (server-side): used for metadata completion and (when thinking=True) codes generation.
     lm_model_path: Optional[str] = None  # e.g. "acestep-5Hz-lm-0.6B"
-    lm_backend: Literal["vllm", "pt", "mlx"] = "vllm"
+    lm_backend: Literal["vllm", "pt"] = "vllm"
 
     constrained_decoding: bool = True
     constrained_decoding_debug: bool = False
@@ -1527,7 +1527,7 @@ def create_app() -> FastAPI:
                         checkpoint_dir = os.path.join(project_root, "checkpoints")
                         lm_model_path = (req.lm_model_path or os.getenv("ACESTEP_LM_MODEL_PATH") or "acestep-5Hz-lm-0.6B").strip()
                         backend = (req.lm_backend or os.getenv("ACESTEP_LM_BACKEND") or "vllm").strip().lower()
-                        if backend not in {"vllm", "pt", "mlx"}:
+                        if backend not in {"vllm", "pt"}:
                             backend = "vllm"
 
                         # Auto-download LM model if not present
@@ -2323,24 +2323,21 @@ def create_app() -> FastAPI:
             init_llm_env = os.getenv("ACESTEP_INIT_LLM", "").strip().lower()
 
             # Step 1: Start with GPU auto-detection result
-            init_llm = gpu_config.init_lm_default
-            print(f"[API Server] GPU auto-detection: init_llm={init_llm} (VRAM: {gpu_config.gpu_memory_gb:.1f}GB, tier: {gpu_config.tier})")
+            init_llm = params.get("init_llm", gpu_config.init_lm_default)
+            print(f"[API Server] GPU auto-detection/UI: init_llm={init_llm} (VRAM: {gpu_config.gpu_memory_gb:.1f}GB, tier: {gpu_config.tier})")
 
-            # Step 2: Apply user override if set
-            if not init_llm_env or init_llm_env == "auto":
-                print("[API Server] ACESTEP_INIT_LLM=auto, using GPU auto-detection result")
-            elif init_llm_env in {"1", "true", "yes", "y", "on"}:
-                if init_llm:
-                    print("[API Server] ACESTEP_INIT_LLM=true (GPU already supports LLM, no override needed)")
-                else:
+            # Step 2: Apply user override from environment ONLY if UI did not set anything
+            if "init_llm" not in params:
+                if not init_llm_env or init_llm_env == "auto":
+                    print("[API Server] ACESTEP_INIT_LLM=auto, using GPU auto-detection result")
+                elif init_llm_env in {"1", "true", "yes", "y", "on"}:
                     init_llm = True
                     print("[API Server] ACESTEP_INIT_LLM=true, overriding GPU auto-detection (force enable)")
-            else:
-                if not init_llm:
-                    print("[API Server] ACESTEP_INIT_LLM=false (GPU already disabled LLM, no override needed)")
                 else:
                     init_llm = False
                     print("[API Server] ACESTEP_INIT_LLM=false, overriding GPU auto-detection (force disable)")
+            else:
+                print("[API Server] Skipping ACESTEP_INIT_LLM override — UI value has priority")
 
             if init_llm:
                 print("[API Server] Loading LLM model...")
@@ -2376,7 +2373,7 @@ def create_app() -> FastAPI:
 
             if init_llm:
                 lm_backend = os.getenv("ACESTEP_LM_BACKEND", "vllm").strip().lower()
-                if lm_backend not in {"vllm", "pt", "mlx"}:
+                if lm_backend not in {"vllm", "pt"}:
                     lm_backend = "vllm"
                 lm_device = os.getenv("ACESTEP_LM_DEVICE", device)
 
@@ -2505,7 +2502,7 @@ def create_app() -> FastAPI:
                 cfg_interval_end=p.float("cfg_interval_end", 1.0),
                 infer_method=p.str("infer_method", "ode"),
                 shift=p.float("shift", 3.0),
-                audio_format=p.str("audio_format", "mp3"),
+                audio_format=p.str("audio_format", "wav32"),
                 use_tiled_decode=p.bool("use_tiled_decode", True),
                 lm_model_path=p.str("lm_model_path") or None,
                 lm_backend=p.str("lm_backend", "vllm"),
@@ -2915,7 +2912,7 @@ def create_app() -> FastAPI:
                 checkpoint_dir = os.path.join(project_root, "checkpoints")
                 lm_model_path = os.getenv("ACESTEP_LM_MODEL_PATH", "acestep-5Hz-lm-0.6B").strip()
                 backend = os.getenv("ACESTEP_LM_BACKEND", "vllm").strip().lower()
-                if backend not in {"vllm", "pt", "mlx"}:
+                if backend not in {"vllm", "pt"}:
                     backend = "vllm"
 
                 # Auto-download LM model if not present

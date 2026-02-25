@@ -101,7 +101,7 @@ def init_service_wrapper(
             lm_model_path=lm_model_path,
             backend=backend,
             device=llm_handler.device,
-            offload_to_cpu=offload_to_cpu,
+            offload_to_cpu=llm_handler.offload_to_cpu,
             dtype=None,
         )
 

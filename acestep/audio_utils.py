@@ -102,24 +102,239 @@ class AudioSaver:
         audio_tensor = audio_tensor.contiguous()
 
         try:
-            # --- WAV32 PCM_32 через soundfile ---
+            # --- WAV Float (32-bit) ---
+            if format == "wavfloat":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".wav")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "pcm_f32le",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> wav float (32-bit) at {final_path} ({sample_rate}Hz)")
+                return str(final_path)
+            
+            # --- WAV32 PCM_32 ---
             if format == "wav32":
                 audio_np = audio_tensor.transpose(0, 1).numpy()
                 sf.write(str(output_path), audio_np, sample_rate, subtype="PCM_32", format="WAV")
                 logger.debug(f"[AudioSaver] Saved audio to {output_path} (wav32 PCM_32, {sample_rate}Hz)")
                 return str(output_path)
+                
+            # --- WAV24 PCM_24 ---
+            if format == "wav24":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
 
-            # --- FLAC / MP3 через torchaudio+soundfile ---
-            if format in ["flac", "mp3"]:
-                torchaudio.save(
-                    str(output_path),
-                    audio_tensor,
-                    sample_rate,
-                    channels_first=True,
-                    backend="soundfile",
-                )
-                logger.debug(f"[AudioSaver] Saved audio to {output_path} ({format}, {sample_rate}Hz)")
-                return str(output_path)
+                final_path = Path(output_path).with_suffix(".wav")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "pcm_s24le",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> wav24 at {final_path} ({sample_rate}Hz)")
+                return str(final_path)    
+    
+            # --- WAV16 PCM_16 ---
+            if format == "wav16":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".wav")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "pcm_s16le",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> wav16 at {final_path} ({sample_rate}Hz)")
+                return str(final_path)
+               
+            # --- AIFF ---
+            if format == "aiff":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".aiff")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "pcm_s16be",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> aiff at {final_path} ({sample_rate}Hz)")
+                return str(final_path)
+  
+            # --- FLAC ---
+            if format == "flac":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".flac")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "flac",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> flac at {final_path} ({sample_rate}Hz)")
+                return str(final_path)
+            
+            # --- ALAC ---
+            if format == "alac":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".m4a")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "alac",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> alac at {final_path} ({sample_rate}Hz)")
+                return str(final_path)
+
+            # --- MP3 ---
+            if format == "mp3":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".mp3")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "libmp3lame",
+                    "-b:a", "320k",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> mp3 at {final_path} ({sample_rate}Hz, 320kbps)")
+                return str(final_path)
+
+            # --- OGG ---
+            if format == "ogg":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".ogg")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "libvorbis",
+                    "-q:a", "10",
+                    "-ar", str(sample_rate),
+                    "-af", "lowpass=22050",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> ogg vorbis at {final_path} ({sample_rate}Hz, Q10, lowpass 22050)")
+                return str(final_path)
+
+            # --- Opus ---
+            if format == "opus":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".opus")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "libopus",
+                    "-b:a", "512k",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> opus at {final_path} ({sample_rate}Hz, ~512kbps)")
+                return str(final_path)
+
+            # --- AAC ---
+            if format == "aac":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".m4a")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "aac",
+                    "-b:a", "512k",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> aac at {final_path} ({sample_rate}Hz, ~512kbps)")
+                return str(final_path)
+
+            # --- WMA ---
+            if format == "wma":
+                tmp_path = str(output_path) + ".tmp.wav"
+                audio_np = audio_tensor.transpose(0, 1).numpy()
+                sf.write(tmp_path, audio_np, sample_rate, subtype="PCM_32", format="WAV")
+                logger.debug(f"[AudioSaver] Temporary wav32 written to {tmp_path}")
+
+                final_path = Path(output_path).with_suffix(".wma")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_path,
+                    "-c:a", "wmav2",
+                    "-b:a", "192k",
+                    str(final_path)
+                ]
+                subprocess.run(cmd, check=True)
+                Path(tmp_path).unlink(missing_ok=True)
+                logger.debug(f"[AudioSaver] Converted wav32 -> wma at {final_path} ({sample_rate}Hz, 192kbps)")
+                return str(final_path)
 
         except Exception as e:
             try:
@@ -364,7 +579,7 @@ def generate_uuid_from_audio_data(
 
 
 # Global default instance
-_default_saver = AudioSaver(default_format="flac")
+_default_saver = AudioSaver(default_format="wav32")
 
 
 def save_audio(
@@ -381,7 +596,7 @@ def save_audio(
         audio_data: Audio data
         output_path: Output path
         sample_rate: Sample rate
-        format: Format (default flac)
+        format: Format (default wav32)
         channels_first: Tensor format flag
     
     Returns:

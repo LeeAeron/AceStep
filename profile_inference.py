@@ -247,7 +247,7 @@ def load_example_config(
             ),
             seeds=[params.seed] if params.seed >= 0 else None,
             use_random_seed=(params.seed < 0),
-            audio_format="flac",
+            audio_format="wav32",
         )
 
         return params, config
@@ -482,7 +482,7 @@ def run_profile_mode(dit_handler, llm_handler, args, timer: PreciseTimer):
             guidance_scale=params.guidance_scale,
         )
         warmup_config = GenerationConfig(
-            batch_size=1, seeds=[42], use_random_seed=False, audio_format="flac"
+            batch_size=1, seeds=[42], use_random_seed=False, audio_format="wav32"
         )
         warmup_start = time.perf_counter()
         warmup_result = generate_music(
@@ -604,7 +604,7 @@ def run_benchmark_mode(dit_handler, llm_handler, args, timer: PreciseTimer):
             seed=42,
         )
         warmup_config = GenerationConfig(
-            batch_size=1, seeds=[42], use_random_seed=False, audio_format="flac"
+            batch_size=1, seeds=[42], use_random_seed=False, audio_format="wav32"
         )
         generate_music(
             dit_handler, llm_handler, warmup_params, warmup_config,
@@ -644,7 +644,7 @@ def run_benchmark_mode(dit_handler, llm_handler, args, timer: PreciseTimer):
             batch_size=cfg["batch_size"],
             seeds=[42 + j for j in range(cfg["batch_size"])],
             use_random_seed=False,
-            audio_format="flac",
+            audio_format="wav32",
         )
 
         timer.sync()
@@ -952,7 +952,7 @@ def _run_single_tier_test(
             batch_size=batch_size,
             seeds=[42 + j for j in range(batch_size)],
             use_random_seed=False,
-            audio_format="flac",
+            audio_format="wav32",
         )
 
         # When testing batch boundaries, temporarily override the GPU tier config's

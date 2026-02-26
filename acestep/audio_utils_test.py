@@ -170,7 +170,7 @@ class AudioSaverFormatTests(unittest.TestCase):
 
     def test_save_audio_invalid_format_fallback(self):
         """save_audio should fall back to default format for invalid formats."""
-        saver = AudioSaver(default_format="flac")
+        saver = AudioSaver(default_format="wav32")
         output_path = Path(self.temp_dir) / "test"
         
         with patch('acestep.audio_utils.torchaudio.save'):
@@ -182,7 +182,7 @@ class AudioSaverFormatTests(unittest.TestCase):
             )
             
             # Should fall back to flac
-            self.assertTrue(result.endswith('.flac'))
+            self.assertTrue(result.endswith('.wav'))
 
     def test_numpy_array_input_with_opus(self):
         """Test that numpy arrays work with Opus format."""

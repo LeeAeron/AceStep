@@ -1004,7 +1004,7 @@ caption="fast slow music"  # Conflicting tempos
 - Use turbo model with `inference_steps=8`
 - Disable ADG (`use_adg=False`)
 - Use `infer_method="ode"` (default)
-- Use compressed format (`audio_format="mp3"`) or default FLAC
+- Use compressed format (`audio_format="mp3"`) or default WAV32
 
 **For Consistency**:
 - Set `use_random_seed=False` in config

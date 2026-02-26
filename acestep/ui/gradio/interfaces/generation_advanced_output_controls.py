@@ -28,9 +28,18 @@ def build_output_controls(
         with gr.Row():
             audio_format = gr.Dropdown(
                 choices=[
+                    ("WAV 32Bit Float", "wavfloat"),
+                    ("WAV 32Bit", "wav32"),
+                    ("WAV 24Bit", "wav24"),
+                    ("WAV 16Bit", "wav16"),
+                    ("AIFF PCM16", "aiff"),
                     ("FLAC", "flac"),
-                    ("MP3", "mp3"),
-                    ("WAV (32-bit)", "wav32"),
+                    ("ALAC", "alac"),
+                    ("MP3 320kbps", "mp3"),
+                    ("OGG Vorbis Q10", "ogg"),
+                    ("OPUS 512kbps", "opus"),
+                    ("AAC 512kbps", "aac"),
+                    ("WMA 192kbps", "wma"),
                 ],
                 value="wav32",
                 label=t("generation.audio_format_label"),

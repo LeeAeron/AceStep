@@ -55,7 +55,7 @@ class BuildGenerationInfoTests(unittest.TestCase):
             seed_value="42",
             inference_steps=100,
             num_audios=2,
-            audio_format="flac",
+            audio_format="wav32",
         )
         self.assertIsInstance(info, str)
         self.assertIn("generation time", info.lower())

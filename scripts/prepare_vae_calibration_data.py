@@ -64,7 +64,7 @@ def main():
     vae = vae.to(device)
     vae.eval()
 
-    audio_files = [f for f in os.listdir(data_dir) if f.endswith('.flac')]
+    audio_files = [f for f in os.listdir(data_dir) if f.endswith('.wav')]
     print(f"Found {len(audio_files)} audio files.")
     
     all_chunks = []

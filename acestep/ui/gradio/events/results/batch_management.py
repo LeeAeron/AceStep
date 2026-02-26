@@ -407,7 +407,7 @@ def _apply_param_defaults(params):
         "task_type": "text2music", "use_adg": False,
         "cfg_interval_start": 0.0, "cfg_interval_end": 1.0,
         "shift": 1.0, "infer_method": "ode", "custom_timesteps": "",
-        "audio_format": "flac", "lm_temperature": 0.85,
+        "audio_format": "wav32", "lm_temperature": 0.85,
         "think_checkbox": True, "lm_cfg_scale": 2.0,
         "lm_top_k": 0, "lm_top_p": 0.9,
         "lm_negative_prompt": "NO USER INPUT",

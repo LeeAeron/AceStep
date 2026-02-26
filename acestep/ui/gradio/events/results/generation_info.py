@@ -33,7 +33,7 @@ def _build_generation_info(
     seed_value: str,
     inference_steps: int,
     num_audios: int,
-    audio_format: str = "flac",
+    audio_format: str = "wav32",
 ) -> str:
     """Build a compact generation timing summary.
 

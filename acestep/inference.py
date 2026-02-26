@@ -179,7 +179,7 @@ class GenerationConfig:
             - int: Single seed value (will be converted to list and padded)
         lm_batch_chunk_size: Batch chunk size for LM processing
         constrained_decoding_debug: Whether to enable constrained decoding debug
-        audio_format: Output audio format, one of "mp3", "flac", "wav32". Default: "flac"
+        audio_format: Output audio format, one of "mp3", "flac", "wav32". Default: "wav32"
     """
     batch_size: int = 2
     allow_lm_batch: bool = False
@@ -187,7 +187,7 @@ class GenerationConfig:
     seeds: Optional[List[int]] = None
     lm_batch_chunk_size: int = 8
     constrained_decoding_debug: bool = False
-    audio_format: str = "flac"  # Default to FLAC for fast saving
+    audio_format: str = "wav32"  # Default to FLAC for fast saving
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert config to dictionary for JSON serialization."""
@@ -635,7 +635,7 @@ def generate_music(
         # Get base params dictionary
         base_params_dict = params.to_dict()
 
-        audio_format = config.audio_format if config.audio_format else "flac"
+        audio_format = config.audio_format if config.audio_format else "wav32"
 
         FORMAT_MAP = {
             "mp3": ("mp3", None),

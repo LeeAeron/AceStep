@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 
-def _make_batch(audio_path="/tmp/audio.flac"):
+def _make_batch(audio_path="/tmp/audio.wav"):
     """Return a minimal completed batch dict for testing."""
     return {
         "status": "completed",

@@ -2,6 +2,14 @@
 ACE-Step V1.5 Pipeline
 Handler wrapper connecting model and UI
 """
+import gradio as gr
+import asyncio
+import logging
+
+asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+logging.getLogger("asyncio").setLevel(logging.CRITICAL)
+
 import os
 import sys
 import time

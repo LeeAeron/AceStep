@@ -23,7 +23,7 @@ def tiled_vae_encode(
     audio: torch.Tensor,
     dtype: torch.dtype,
     chunk_size: Optional[int] = None,
-    overlap: int = 96000,
+    overlap: int = 192000,
 ) -> torch.Tensor:
     """Encode audio through the VAE using overlap-discard tiling.
 

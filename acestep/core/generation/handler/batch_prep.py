@@ -97,7 +97,7 @@ class BatchPrepMixin:
 
         calculated_duration = None
         if processed_src_audio is not None:
-            calculated_duration = processed_src_audio.shape[-1] / 48000.0
+            calculated_duration = processed_src_audio.shape[-1] / 192000.0
         elif audio_duration is not None and float(audio_duration) > 0:
             calculated_duration = float(audio_duration)
 

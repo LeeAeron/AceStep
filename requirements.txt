@@ -50,3 +50,10 @@ bitsandbytes>=0.45.0
 # Prodigy adaptive optimizer (auto-tunes LR)
 # Great if you don't want to manually tune learning rate.
 prodigyopt>=1.1.2
+
+#Streamlit dependencies
+streamlit==1.40.2
+streamlit-player==0.1.5
+plotly==5.24.1
+librosa==0.10.2
+git+https://github.com/theevann/streamlit-audiorecorder.git

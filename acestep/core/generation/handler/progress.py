@@ -6,6 +6,15 @@ import threading
 import time
 from typing import Optional
 
+from loguru import logger
+
+# Conservative per-step estimate used when no historical timing data exists
+# (i.e., first-ever generation on this machine).  2.5s/step is deliberately
+# slow so the progress bar undershoots rather than overshoots — reaching 79%
+# early and pausing is far less alarming than freezing at 52% with zero
+# movement.  The estimate self-corrects after the first successful generation.
+_FALLBACK_PER_STEP_SEC = 2.5
+
 
 class ProgressMixin:
     def _get_project_root(self) -> str:
@@ -146,7 +155,12 @@ class ProgressMixin:
         duration_sec: Optional[float],
         desc: str,
     ):
-        """Best-effort progress updates during diffusion using previous step timing."""
+        """Best-effort progress updates during diffusion using previous step timing.
+
+        Falls back to a conservative default estimate when no historical data
+        exists (first-ever generation).  This ensures the progress bar always
+        moves during Phase 2 instead of freezing at 52%.
+        """
         if progress is None or infer_steps <= 0:
             return None, None
         per_step = self._estimate_diffusion_per_step(
@@ -154,8 +168,18 @@ class ProgressMixin:
             batch_size=batch_size,
             duration_sec=duration_sec,
         ) or self._last_diffusion_per_step_sec
+
         if not per_step or per_step <= 0:
-            return None, None
+            # No history at all — use conservative fallback so progress bar
+            # still moves on first run.  Scale by batch size for a rough
+            # approximation.
+            per_step = _FALLBACK_PER_STEP_SEC * max(1, batch_size)
+            logger.info(
+                f"[progress] No timing history — using fallback estimate "
+                f"({per_step:.1f}s/step for batch_size={batch_size}).  "
+                f"This will self-calibrate after the first generation."
+            )
+
         expected = per_step * infer_steps
         if expected <= 0:
             return None, None

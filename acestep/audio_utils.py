@@ -83,7 +83,7 @@ class AudioSaver:
         self,
         audio_data: Union[torch.Tensor, np.ndarray],
         output_path: Union[str, Path],
-        sample_rate: int = 48000,
+        sample_rate: int = 192000,
         format: Optional[str] = None,
         channels_first: bool = True,
     ) -> str:
@@ -398,7 +398,7 @@ class AudioSaver:
         audio_batch: Union[List[torch.Tensor], torch.Tensor],
         output_dir: Union[str, Path],
         file_prefix: str = "audio",
-        sample_rate: int = 48000,
+        sample_rate: int = 192000,
         format: Optional[str] = None,
         channels_first: bool = True,
     ) -> List[str]:
@@ -585,7 +585,7 @@ _default_saver = AudioSaver(default_format="wav32")
 def save_audio(
     audio_data: Union[torch.Tensor, np.ndarray],
     output_path: Union[str, Path],
-    sample_rate: int = 48000,
+    sample_rate: int = 192000,
     format: Optional[str] = None,
     channels_first: bool = True,
 ) -> str:

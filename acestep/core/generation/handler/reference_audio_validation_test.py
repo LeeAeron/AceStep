@@ -32,7 +32,7 @@ class ReferenceAudioValidationTests(unittest.TestCase):
         result = handler.generate_music(
             captions="",
             lyrics="",
-            reference_audio="not_audio.mp3",
+            reference_audio="not_audio.wav",
             progress=lambda *_args, **_kwargs: None,
         )
 

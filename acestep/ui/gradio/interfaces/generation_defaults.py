@@ -69,7 +69,7 @@ def compute_init_defaults(
     if gpu_config.lm_backend_restriction == "pt_mlx_only":
         available_backends = ["pt", "mlx"]
     else:
-        available_backends = ["vllm", "pt", "mlx"]
+        available_backends = ["vllm", "pt"]
     recommended_backend = gpu_config.recommended_backend
     if recommended_backend not in available_backends:
         recommended_backend = available_backends[0]

@@ -52,8 +52,8 @@ class ConditioningEmbedMixinTests(unittest.TestCase):
         """Infer reference latents and preserve per-batch ordering mask."""
         host = _Host()
         refer_audioss = [
-            [torch.ones(2, 96000)],
-            [torch.ones(2, 96000)],
+            [torch.ones(2, 192000)],
+            [torch.ones(2, 192000)],
         ]
         latents, order_mask = host.infer_refer_latent(refer_audioss)
         self.assertEqual(latents.dim(), 3)
@@ -63,7 +63,7 @@ class ConditioningEmbedMixinTests(unittest.TestCase):
     def test_infer_refer_latent_cache_hit_reuses_encoding(self):
         """Reuse cached latent when the exact same tensor object appears multiple times."""
         host = _Host()
-        shared = torch.ones(2, 96000)
+        shared = torch.ones(2, 192000)
         latents, order_mask = host.infer_refer_latent([[shared], [shared]])
         self.assertEqual(latents.shape[0], 2)
         self.assertEqual(order_mask.tolist(), [0, 1])
@@ -72,7 +72,7 @@ class ConditioningEmbedMixinTests(unittest.TestCase):
     def test_infer_refer_latent_uses_silence_fast_path(self):
         """Use silence-latent shortcut when reference audio is an explicit zero tensor."""
         host = _Host()
-        latents, order_mask = host.infer_refer_latent([[torch.zeros(2, 96000)]])
+        latents, order_mask = host.infer_refer_latent([[torch.zeros(2, 192000)]])
         self.assertEqual(latents.shape, (1, 128, 6))
         self.assertEqual(order_mask.tolist(), [0])
         self.assertEqual(host.tiled_encode_calls, 0)
@@ -80,7 +80,7 @@ class ConditioningEmbedMixinTests(unittest.TestCase):
     def test_infer_refer_latent_handles_multiple_references_per_item(self):
         """Flatten multiple references for one batch item while preserving order index."""
         host = _Host()
-        refer_audioss = [[torch.ones(2, 96000), torch.ones(2, 96000)]]
+        refer_audioss = [[torch.ones(2, 192000), torch.ones(2, 192000)]]
         latents, order_mask = host.infer_refer_latent(refer_audioss)
         self.assertEqual(latents.shape[0], 2)
         self.assertEqual(order_mask.tolist(), [0, 0])
@@ -93,7 +93,7 @@ class ConditioningEmbedMixinTests(unittest.TestCase):
             "target_latents": torch.zeros(2, 128, 6, dtype=torch.float32),
             "src_latents": torch.zeros(2, 128, 6, dtype=torch.float32),
             "latent_masks": torch.ones(2, 128, dtype=torch.long),
-            "refer_audioss": [[torch.zeros(2, 96000)], [torch.zeros(2, 96000)]],
+            "refer_audioss": [[torch.zeros(2, 192000)], [torch.zeros(2, 192000)]],
             "chunk_masks": torch.ones(2, 128, dtype=torch.bool),
             "spans": [("full", 0, 128), ("full", 0, 128)],
             "text_token_idss": torch.ones(2, 8, dtype=torch.long),

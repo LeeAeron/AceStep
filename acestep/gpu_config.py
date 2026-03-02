@@ -143,7 +143,7 @@ class GPUConfig:
     # LM backend restriction
     # "all" = any backend, "pt_mlx_only" = only pt/mlx (no vllm), used for MPS (vllm requires CUDA)
     lm_backend_restriction: str  # "all" or "pt_mlx_only"
-    recommended_backend: str  # Recommended default backend: "vllm", "pt", or "mlx"
+    recommended_backend: str  # Recommended default backend: "vllm", "pt"
     
     # Offload defaults
     offload_to_cpu_default: bool  # Whether offload_to_cpu should be enabled by default

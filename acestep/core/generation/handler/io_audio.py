@@ -78,17 +78,13 @@ class IoAudioMixin:
                 f"[process_reference_audio] Reference audio duration: {audio.shape[-1] / sr:.6f} seconds"
             )
 
-            # Normalize to float32 stereo 48kHz
             audio = self._normalize_audio_to_stereo_48k(audio, sr)
-
-            # If silent, nothing to do
             if self.is_silence(audio):
                 return None
 
             target_frames = 30 * 48000
             segment_frames = 10 * 48000
 
-            # If shorter than 30s, repeat to reach target length (float32)
             if audio.shape[-1] < target_frames:
                 repeat_times = math.ceil(target_frames / audio.shape[-1])
                 audio = audio.repeat(1, repeat_times)

@@ -116,8 +116,8 @@ class TaskUtilsMixin:
         """Create silent stereo target audio with safe duration handling."""
         try:
             duration_seconds = max(0.1, round(duration_seconds, 1))
-            frames = int(duration_seconds * 48000)
+            frames = int(duration_seconds * 192000)
             return torch.zeros(2, frames)
         except (TypeError, ValueError, OverflowError):
             logger.exception("[create_target_wavs] Error creating target audio")
-            return torch.zeros(2, 30 * 48000)
+            return torch.zeros(2, 30 * 192000)

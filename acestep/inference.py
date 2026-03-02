@@ -187,7 +187,7 @@ class GenerationConfig:
     seeds: Optional[List[int]] = None
     lm_batch_chunk_size: int = 8
     constrained_decoding_debug: bool = False
-    audio_format: str = "wav32"  # Default to FLAC for fast saving
+    audio_format: str = "wav32"
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert config to dictionary for JSON serialization."""
@@ -676,7 +676,7 @@ def generate_music(
 
             # Get audio tensor and metadata
             audio_tensor = dit_audio.get("tensor")
-            sample_rate = dit_audio.get("sample_rate", 48000)
+            sample_rate = dit_audio.get("sample_rate", 192000)
 
             # --- NORMALIZATION & LOGGING ---
             if params.enable_normalization and params.normalization_db <= 0.0:

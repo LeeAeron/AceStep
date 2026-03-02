@@ -5,7 +5,7 @@ from diffusers.models import AutoencoderOobleck
 from tqdm import tqdm
 import torch.nn.functional as F
 
-def process_audio(audio_path, target_sr=48000):
+def process_audio(audio_path, target_sr=192000):
     try:
         # Load audio using soundfile
         audio_np, sr = sf.read(audio_path, dtype='float32')

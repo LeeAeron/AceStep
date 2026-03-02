@@ -11,6 +11,16 @@ def _build_left_generate_toggles(
     lm_initialized: bool,
     service_mode: bool,
 ) -> tuple[gr.Checkbox, gr.Checkbox]:
+    """Create the left-side runtime toggles shown next to the generate button.
+
+    Args:
+        lm_initialized: Whether LM is initialized, used to gate Think interactivity.
+        service_mode: Whether UI is in service mode, used to gate toggle interactivity.
+
+    Returns:
+        The ``think_checkbox`` and ``auto_score`` controls in creation order.
+    """
+
     with gr.Column(scale=1, variant="compact"):
         think_checkbox = gr.Checkbox(
             label=t("generation.think_label"),
@@ -28,6 +38,15 @@ def _build_left_generate_toggles(
 
 
 def _build_right_generate_toggles(service_mode: bool) -> tuple[gr.Checkbox, gr.Checkbox]:
+    """Create the right-side runtime toggles shown next to the generate button.
+
+    Args:
+        service_mode: Whether UI is in service mode, used to gate toggle interactivity.
+
+    Returns:
+        The ``autogen_checkbox`` and ``auto_lrc`` controls in creation order.
+    """
+
     with gr.Column(scale=1, variant="compact"):
         autogen_checkbox = gr.Checkbox(
             label=t("generation.autogen_label"),
@@ -64,6 +83,18 @@ def build_generate_row_controls(
     lm_initialized: bool,
     service_mode: bool,
 ) -> dict[str, Any]:
+    """Compose generate-row controls from toggle helpers and the generate button.
+
+    Args:
+        service_pre_initialized: Whether startup params should prefill interactive defaults.
+        init_params: Optional startup state containing generate-button enable state.
+        lm_initialized: Whether LM is initialized, used to gate think-checkbox interactivity.
+        service_mode: Whether the UI is running in service mode (disables some controls).
+
+    Returns:
+        A component map containing generate button, runtime toggles, and row container.
+    """
+
     params = init_params or {}
     generate_btn_interactive = params.get("enable_generate", False) if service_pre_initialized else False
     with gr.Row(equal_height=True, visible=True) as generate_btn_row:
@@ -77,6 +108,7 @@ def build_generate_row_controls(
                 variant="primary",
                 size="lg",
                 interactive=generate_btn_interactive,
+				elem_id="acestep-generate-btn",
             )
             restart_btn = gr.Button(
                 t("generation.restart_btn"),

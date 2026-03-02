@@ -36,7 +36,7 @@ class PaddingMixin:
                         padding_info_batch.append({"left_padding_duration": 0.0, "right_padding_duration": 0.0})
                     elif is_repaint_task or is_lego_task:
                         # Repaint/lego task: May need padding for outpainting
-                        src_audio_duration = processed_src_audio.shape[-1] / 48000.0
+                        src_audio_duration = processed_src_audio.shape[-1] / 192000.0
 
                         # Determine actual end time
                         if repainting_end is None or repainting_end < 0:
@@ -48,8 +48,8 @@ class PaddingMixin:
                         right_padding_duration = max(0, actual_end - src_audio_duration)
 
                         # Create padded audio
-                        left_padding_frames = int(left_padding_duration * 48000)
-                        right_padding_frames = int(right_padding_duration * 48000)
+                        left_padding_frames = int(left_padding_duration * 192000)
+                        right_padding_frames = int(right_padding_duration * 192000)
 
                         if left_padding_frames > 0 or right_padding_frames > 0:
                             # Pad the src audio
@@ -118,7 +118,7 @@ class PaddingMixin:
                 # Handle repainting_end - use src audio duration if not specified or negative
                 if processed_src_audio is not None:
                     # If src audio is provided, use its duration as default end
-                    src_audio_duration = processed_src_audio.shape[-1] / 48000.0
+                    src_audio_duration = processed_src_audio.shape[-1] / 192000.0
                     if repainting_end is None or repainting_end < 0:
                         # Use src audio duration (before padding), then adjust for padding
                         adjusted_end = src_audio_duration + padding_info_batch[0]["left_padding_duration"]

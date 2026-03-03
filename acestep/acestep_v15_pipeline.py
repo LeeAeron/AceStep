@@ -63,6 +63,64 @@ except ImportError:
     from acestep.model_downloader import ensure_lm_model
 
 
+def detect_gpu_architecture():
+    """
+    Detects the GPU architecture using compute capability to select the optimal backend.
+
+    Returns:
+    str: 'pt' for older GPUs (Pascal, GTX 16xx) or CPUs, 'vllm' for modern GPUs
+    """
+    try:
+        import torch
+        
+        if not torch.cuda.is_available():
+            print("CUDA not available -> using 'pt' backend (CPU)")
+            return "pt"
+        
+        # Get compute capability as a tuple (major, minor)
+        # Pascal = 6.0, 6.1, 6.2 (GTX 10xx: 1060, 1070, 1080, 1080 Ti, etc.)
+        # Turing = 7.5 (GTX 16xx: 1650, 1660, 1660 Ti, 1660 Super; RTX 20xx: 2060, 2070, 2080, etc.)
+        # Ampere = 8.0, 8.6 (RTX 30xx: 3050, 3060, 3070, 3080, 3090; A100, etc.)
+        # Ada = 8.9 (RTX 40xx: 4060, 4070, 4080, 4090, etc.)
+        # Hopper = 9.0 (H100, etc.)
+        major, minor = torch.cuda.get_device_capability(0)
+        compute_capability = major * 10 + minor  # For example: 61, 75, 86, 89, 90
+        
+        gpu_name = torch.cuda.get_device_name(0)
+        print(f"Detected GPU: {gpu_name} (compute capability: {major}.{minor})")
+        
+        # Pascal (60-62) and later - only pt due to limited support for modern operations
+        if compute_capability < 75:
+            print(f"  Pascal architecture or older (CC < 7.5) -> using 'pt' backend")
+            return "pt"
+        
+        # Turing (75) — let's check if it's a GTX 16xx or RTX 20xx
+        elif compute_capability == 75:
+            gpu_name_lower = gpu_name.lower()
+            # GTX 16xx series have less VRAM and perform better with pt
+            if 'gtx 16' in gpu_name_lower:
+                print(f"  GTX 16xx series detected -> using 'pt' backend")
+                return "pt"
+            # RTX 20xx can use vllm, but we'll conservatively leave pt.
+            # If you want to enable vllm for RTX 20xx, replace it with: return "vllm"
+            print(f"  RTX 20xx series detected -> using 'pt' backend (conservative)")
+            return "pt"
+        
+        # Ampere (80, 86) and newer - vllm provides significant performance gains
+        elif compute_capability >= 80:
+            print(f"  Modern architecture (Ampere+) -> using 'vllm' backend")
+            return "vllm"
+        
+        # Fallback for unknown cases
+        else:
+            print(f"  Unknown compute capability -> using 'pt' backend (safe fallback)")
+            return "pt"
+        
+    except Exception as e:
+        print(f"Could not detect GPU architecture: {e} -> defaulting to 'pt'")
+        return "pt"
+
+
 def create_demo(init_params=None, language='en'):
     """
     Create Gradio demo interface
@@ -104,6 +162,9 @@ def main():
     gpu_config = get_gpu_config()
     set_global_gpu_config(gpu_config)  # Set global config for use across modules
     
+    # AUTO-DETECT BACKEND BASED ON GPU ARCHITECTURE
+    _default_backend = detect_gpu_architecture()
+    
     gpu_memory_gb = gpu_config.gpu_memory_gb
     _is_mac = is_mps_platform()
     # Enable auto-offload for GPUs below 20 GB.  16 GB GPUs cannot hold all
@@ -112,7 +173,6 @@ def main():
     # 16 GB GPUs to never offload, leading to OOM.
     # Mac (Apple Silicon) uses unified memory — offloading provides no benefit.
     auto_offload = (not _is_mac) and gpu_memory_gb > 0 and gpu_memory_gb < VRAM_AUTO_OFFLOAD_THRESHOLD_GB
-    _default_backend = "pt" or "vllm"
     
     # Print GPU configuration info
     print(f"\n{'='*60}")
@@ -126,6 +186,7 @@ def main():
     print(f"  Max Batch Size (without LM): {gpu_config.max_batch_size_without_lm}")
     print(f"  Default LM Init: {gpu_config.init_lm_default}")
     print(f"  Available LM Models: {gpu_config.available_lm_models or 'None'}")
+    print(f"  Default Backend: {_default_backend} (auto-detected)")
     print(f"{'='*60}\n")
     
     if _is_mac:
@@ -186,7 +247,16 @@ def main():
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"], help="Processing device (default: cuda)")
     parser.add_argument("--init_llm", type=lambda x: x.lower() in ['true', '1', 'yes'], default=True, help="Initialize 5Hz LM (default: auto based on GPU memory)")
     parser.add_argument("--lm_model_path", type=str, default=None, help="5Hz LM model path (e.g., 'acestep-5Hz-lm-0.6B')")
-    parser.add_argument("--backend", type=str, default="pt", choices=["vllm", "pt"], help=f"5Hz LM backend (default: {_default_backend})")
+    
+    # BACKEND WITH AUTO-DETECTION
+    parser.add_argument(
+        "--backend", 
+        type=str, 
+        default=_default_backend,  # auto-detected: 'pt' or 'vllm'
+        choices=["vllm", "pt"], 
+        help=f"5Hz LM backend (default: {_default_backend}, auto-detected based on GPU architecture)"
+    )
+    
     parser.add_argument("--use_flash_attention", type=lambda x: x.lower() in ['true', '1', 'yes'], default=None, help="Use flash attention (default: auto-detect)")
     parser.add_argument("--offload_to_cpu", type=lambda x: x.lower() in ['true', '1', 'yes'], default=True, help=f"Offload models to CPU (default: {'True' if auto_offload else 'False'}, auto-detected based on GPU VRAM)")
     _default_offload_dit = gpu_config.offload_dit_to_cpu_default if not _is_mac else False
@@ -234,11 +304,16 @@ def main():
                 "SERVICE_MODE_LM_MODEL",
                 "acestep-5Hz-lm-1.7B-v4-fix"
             )
-        # Backend for service mode (from env or fallback to vllm)
-        args.backend = os.environ.get("SERVICE_MODE_BACKEND", "vllm")
+        # Backend for service mode (from env or fallback to auto-detected)
+        # But only if not explicitly specified in .env
+        env_backend = os.environ.get("SERVICE_MODE_BACKEND")
+        if env_backend:
+            args.backend = env_backend
+            print(f"  Backend: {args.backend} (from SERVICE_MODE_BACKEND env)")
+        else:
+            print(f"  Backend: {args.backend} (auto-detected)")
         print(f"  DiT model: {args.config_path}")
         print(f"  LM model: {args.lm_model_path}")
-        print(f"  Backend: {args.backend}")
     
     # Auto-enable CPU offload for tier6 GPUs (16-24GB) when using the 4B LM model
     # The 4B LM (~8GB) + DiT (~4.7GB) + VAE + text encoder exceeds 16-20GB with activations
@@ -348,7 +423,7 @@ def main():
                     except Exception as e:
                         print(f"Warning: Failed to download LM model: {e}", file=sys.stderr)
 
-                    print(f"Initializing 5Hz LM: {args.lm_model_path} on {args.device}...")
+                    print(f"Initializing 5Hz LM: {args.lm_model_path} on {args.device} (backend: {args.backend})...")
                     lm_status, lm_success = llm_handler.initialize(
                         checkpoint_dir=checkpoint_dir,
                         lm_model_path=args.lm_model_path,

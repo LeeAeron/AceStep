@@ -247,19 +247,6 @@ def main():
             args.offload_to_cpu = True
             print(f"Auto-enabling CPU offload (4B LM model requires offloading on {gpu_memory_gb:.0f}GB GPU)")
 
-    # Safety: on 16GB GPUs, prevent selecting LM models that are too large.
-    # Even with offloading, a 4B LM (8 GB weights + KV cache) leaves almost no
-    # headroom for DiT activations on a 16 GB card.
-    if args.lm_model_path and 0 < gpu_memory_gb < VRAM_AUTO_OFFLOAD_THRESHOLD_GB:
-        if "4B" in args.lm_model_path:
-            # Downgrade to 1.7B if available
-            fallback = args.lm_model_path.replace("4B", "1.7B")
-            print(
-                f"WARNING: 4B LM model is too large for {gpu_memory_gb:.0f}GB GPU. "
-                f"Downgrading to 1.7B variant: {fallback}"
-            )
-            args.lm_model_path = fallback
-
     try:
         init_params = None
         dit_handler = None

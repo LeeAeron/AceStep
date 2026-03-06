@@ -113,6 +113,27 @@ class ReleaseTaskRequestBuilderTests(unittest.TestCase):
         self.assertEqual("from-override", request.prompt)
         self.assertEqual("override-lyrics", request.lyrics)
 
+    def test_build_request_forwards_audio_code_string_and_cover_noise_strength(self):
+        """Builder should include audio_code_string and cover_noise_strength in payload."""
+
+        parser = _FakeParser(
+            {
+                "audio_code_string": "<|audio_code_7|>",
+                "cover_noise_strength": 0.6,
+            }
+        )
+        request = build_generate_music_request(
+            parser=parser,
+            request_model_cls=lambda **kwargs: SimpleNamespace(**kwargs),
+            default_dit_instruction="default-instruction",
+            lm_default_temperature=0.85,
+            lm_default_cfg_scale=2.5,
+            lm_default_top_p=0.9,
+        )
+
+        self.assertEqual("<|audio_code_7|>", request.audio_code_string)
+        self.assertAlmostEqual(0.6, request.cover_noise_strength)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1128,7 +1128,7 @@ class LoRATrainer:
             # Save checkpoint
             if (epoch + 1) % self.training_config.save_every_n_epochs == 0:
                 checkpoint_dir = os.path.join(
-                    self.training_config.output_dir, "checkpoints", f"epoch_{epoch + 1}"
+                    self.training_config.output_dir, "checkpoints", f"epoch_{epoch + 1}_loss_{avg_epoch_loss:.4f}"
                 )
                 save_training_checkpoint(
                     self.module.model,
@@ -1299,7 +1299,7 @@ class LoRATrainer:
 
             if (epoch + 1) % self.training_config.save_every_n_epochs == 0:
                 checkpoint_dir = os.path.join(
-                    self.training_config.output_dir, "checkpoints", f"epoch_{epoch + 1}"
+                    self.training_config.output_dir, "checkpoints", f"epoch_{epoch + 1}_loss_{avg_epoch_loss:.4f}"
                 )
                 save_lora_weights(self.module.model, checkpoint_dir)
                 yield global_step, avg_epoch_loss, "💾 Checkpoint saved"
@@ -1869,7 +1869,7 @@ class LoKRTrainer:
 
             if (epoch + 1) % self.training_config.save_every_n_epochs == 0:
                 checkpoint_dir = os.path.join(
-                    self.training_config.output_dir, "checkpoints", f"epoch_{epoch + 1}"
+                    self.training_config.output_dir, "checkpoints", f"epoch_{epoch + 1}_loss_{avg_epoch_loss:.4f}"
                 )
                 save_lokr_training_checkpoint(
                     self.module.lycoris_net,
@@ -2034,7 +2034,7 @@ class LoKRTrainer:
 
             if (epoch + 1) % self.training_config.save_every_n_epochs == 0:
                 checkpoint_dir = os.path.join(
-                    self.training_config.output_dir, "checkpoints", f"epoch_{epoch + 1}"
+                    self.training_config.output_dir, "checkpoints", f"epoch_{epoch + 1}_loss_{avg_epoch_loss:.4f}"
                 )
                 save_lokr_training_checkpoint(
                     self.module.lycoris_net,

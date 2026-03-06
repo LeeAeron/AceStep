@@ -18,8 +18,8 @@ class AudioSaverFormatTests(unittest.TestCase):
     def setUp(self):
         """Set up temporary directory for test outputs."""
         self.temp_dir = tempfile.mkdtemp()
-        self.sample_audio = torch.randn(2, 48000)  # 2 channels, 1 second at 48kHz
-        self.sample_rate = 48000
+        self.sample_audio = torch.randn(2, 192000)  # 2 channels, 1 second at 48kHz
+        self.sample_rate = 192000
 
     def tearDown(self):
         """Clean up temporary directory."""
@@ -188,7 +188,7 @@ class AudioSaverFormatTests(unittest.TestCase):
         """Test that numpy arrays work with Opus format."""
         saver = AudioSaver()
         output_path = Path(self.temp_dir) / "test_numpy.opus"
-        audio_np = np.random.randn(2, 48000).astype(np.float32)
+        audio_np = np.random.randn(2, 192000).astype(np.float32)
         
         with patch('acestep.audio_utils.torchaudio.save') as mock_save:
             result = saver.save_audio(

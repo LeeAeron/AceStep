@@ -4,7 +4,7 @@ Batch Generator component - generate multiple songs at once
 import streamlit as st
 import pandas as pd
 from utils import ProjectManager, get_dit_handler, get_llm_handler, is_dit_ready, is_llm_ready
-from config import PROJECTS_DIR, DEFAULT_DURATION, DEFAULT_BPM
+from config import PROJECTS_DIR, GENRES, MOODS, DEFAULT_DURATION, DEFAULT_BPM
 from loguru import logger
 from acestep.inference import generate_music, GenerationParams, GenerationConfig
 import os
@@ -90,6 +90,16 @@ def show_batch_generator():
         col1, col2, col3 = st.columns(3)
         
         with col1:
+            parallel_count = st.slider(
+                "Process in Parallel",
+                min_value=1,
+                max_value=4,
+                value=2,
+                help="Number of songs to generate simultaneously",
+                key="parallel_count"
+            )
+        
+        with col2:
             inference_steps = st.slider(
                 "Diffusion Steps",
                 min_value=8,
@@ -99,7 +109,7 @@ def show_batch_generator():
                 key="batch_steps"
             )
         
-        with col2:
+        with col3:
             guidance_scale = st.slider(
                 "Guidance Scale",
                 min_value=1.0,
@@ -109,7 +119,7 @@ def show_batch_generator():
                 key="batch_guidance"
             )
         
-        with col3:
+        with col4:
             batch_size = st.slider(
                 "Batch Size",
                 min_value=1,
@@ -120,10 +130,10 @@ def show_batch_generator():
             )
         
         # Advanced settings
-        col4, col5 = st.columns(2)
-        with col4:
-            use_cot = st.checkbox("Use Chain-of-Thought (LLM)", value=is_llm_ready(), key="batch_cot")
+        col5, col6 = st.columns(2)
         with col5:
+            use_cot = st.checkbox("Use Chain-of-Thought (LLM)", value=is_llm_ready(), key="batch_cot")
+        with col6:
             audio_format = st.selectbox(
                 "Output Format",
                 ["wav32", "flac", "mp3"],

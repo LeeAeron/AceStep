@@ -1,8 +1,10 @@
 """Background AutoGen batch generation orchestration."""
 
+import gc
 import traceback
 
 import gradio as gr
+import torch
 from loguru import logger
 
 from acestep.ui.gradio.events.results.batch_management_helpers import (
@@ -48,6 +50,10 @@ def generate_next_batch_background(
 
     try:
         _apply_param_defaults(params)
+
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         generator = generate_with_progress(
             dit_handler, llm_handler,

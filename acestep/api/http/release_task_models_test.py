@@ -19,6 +19,20 @@ class ReleaseTaskModelsTests(unittest.TestCase):
         self.assertEqual(DEFAULT_DIT_INSTRUCTION, req.instruction)
         self.assertTrue(req.use_random_seed)
 
+    def test_new_fields_have_expected_defaults(self):
+        """New audio_code_string and cover_noise_strength should default to safe values."""
+
+        req = GenerateMusicRequest()
+        self.assertEqual("", req.audio_code_string)
+        self.assertAlmostEqual(0.0, req.cover_noise_strength)
+
+    def test_audio_code_string_and_cover_noise_strength_are_accepted(self):
+        """Model should accept user-supplied audio_code_string and cover_noise_strength."""
+
+        req = GenerateMusicRequest(audio_code_string="<|audio_code_1|>", cover_noise_strength=0.75)
+        self.assertEqual("<|audio_code_1|>", req.audio_code_string)
+        self.assertAlmostEqual(0.75, req.cover_noise_strength)
+
 
 if __name__ == "__main__":
     unittest.main()

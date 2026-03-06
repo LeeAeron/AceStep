@@ -60,6 +60,8 @@ def build_generate_music_request(
         repainting_end=parser.float("repainting_end"),
         instruction=parser.str("instruction", default_dit_instruction),
         audio_cover_strength=parser.float("audio_cover_strength", 1.0),
+        cover_noise_strength=parser.float("cover_noise_strength", 0.0),
+        audio_code_string=parser.str("audio_code_string"),
         reference_audio_path=reference_audio,
         src_audio_path=src_audio,
         task_type=parser.str("task_type", "text2music"),

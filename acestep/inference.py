@@ -637,14 +637,6 @@ def generate_music(
 
         audio_format = config.audio_format if config.audio_format else "wav32"
 
-        FORMAT_MAP = {
-            "mp3": ("mp3", None),
-            "flac": ("flac", None),
-            "wav32": ("wav", "PCM_32"),
-        }
-
-        fmt, subtype = FORMAT_MAP.get(audio_format, ("wav", "PCM_16"))
-
         audio_saver = AudioSaver(default_format=audio_format)
 
         # Use handler's temp_dir for saving files

@@ -15,7 +15,7 @@ class _Host(GenerateMusicRequestMixin):
         """Initialize state and default stubs used by helper methods."""
         self.current_offload_cost = 0.0
         self.batch_size = 2
-        self.sample_rate = 48000
+        self.sample_rate = 192000
         self.model = object()
         self.vae = object()
         self.text_tokenizer = object()

@@ -143,7 +143,7 @@ def profile_dit(checkpoint_dir: str, config_path: str = "acestep-v15-turbo") -> 
     # Profile inference at different batch sizes and durations
     inference_results = []
     
-    # Duration -> latent_length mapping: 48000 Hz audio, 5 Hz latent = 9600 audio samples per latent frame
+    # Duration -> latent_length mapping: audio, 5 Hz latent = 9600 audio samples per latent frame
     # Actually: latent_length = ceil(duration * 5) for 5Hz models
     durations = [60, 120, 240]
     batch_sizes = [1, 2, 4]

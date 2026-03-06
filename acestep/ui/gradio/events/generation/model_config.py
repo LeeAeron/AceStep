@@ -71,7 +71,7 @@ def get_ui_control_config(is_turbo: bool, is_pure_base: bool = False) -> dict:
             "inference_steps_minimum": 1,
             "guidance_scale_visible": False,
             "use_adg_visible": False,
-            "shift_value": 3.0,
+            "shift_value": 6.0,
             "shift_visible": True,
             "cfg_interval_start_visible": False,
             "cfg_interval_end_visible": False,
@@ -80,12 +80,12 @@ def get_ui_control_config(is_turbo: bool, is_pure_base: bool = False) -> dict:
         }
     else:
         return {
-            "inference_steps_value": 32,
+            "inference_steps_value": 50,
             "inference_steps_maximum": 200,
             "inference_steps_minimum": 1,
             "guidance_scale_visible": True,
             "use_adg_visible": True,
-            "shift_value": 3.0,
+            "shift_value": 6.0,
             "shift_visible": True,
             "cfg_interval_start_visible": True,
             "cfg_interval_end_visible": True,

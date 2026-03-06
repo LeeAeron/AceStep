@@ -60,7 +60,7 @@ class _Host(GenerateMusicPayloadMixin):
 
     def __init__(self):
         """Initialize deterministic sample rate state."""
-        self.sample_rate = 48000
+        self.sample_rate = 192000
 
 
 class GenerateMusicPayloadMixinTests(unittest.TestCase):
@@ -102,7 +102,7 @@ class GenerateMusicPayloadMixinTests(unittest.TestCase):
         self.assertTrue(payload["success"])
         self.assertEqual(payload["error"], None)
         self.assertEqual(len(payload["audios"]), 1)
-        self.assertEqual(payload["audios"][0]["sample_rate"], 48000)
+        self.assertEqual(payload["audios"][0]["sample_rate"], 192000)
         self.assertEqual(payload["extra_outputs"]["seed_value"], 7)
         self.assertEqual(payload["extra_outputs"]["pred_latents"].device.type, "cpu")
         self.assertEqual(progress_calls[0][0], 0.99)

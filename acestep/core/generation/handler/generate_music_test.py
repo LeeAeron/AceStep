@@ -70,7 +70,7 @@ class _Host(GenerateMusicMixin):
         self.text_tokenizer = object()
         self.text_encoder = object()
         self.calls: Dict[str, Any] = {}
-        self._final_payload = {"audios": [{"tensor": torch.zeros(1, 4), "sample_rate": 48000}], "success": True}
+        self._final_payload = {"audios": [{"tensor": torch.zeros(1, 4), "sample_rate": 192000}], "success": True}
         self._readiness_error = {
             "audios": [],
             "status_message": "not ready",

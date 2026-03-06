@@ -10,6 +10,7 @@ import json
 import time as time_module
 
 import gradio as gr
+import torch
 from loguru import logger
 
 from acestep.inference import generate_music, GenerationParams, GenerationConfig
@@ -341,12 +342,17 @@ def generate_with_progress(
     final_codes_display = [gr.skip()] * 8
     final_accordions = [gr.skip()] * 8
 
+    extra_to_store = {**result.extra_outputs, "lrcs": final_lrcs_list, "subtitles": final_subtitles_list}
+    for k, v in extra_to_store.items():
+        if isinstance(v, torch.Tensor) and v.is_cuda:
+            extra_to_store[k] = v.cpu()
+
     yield (
         *audio_playback_updates,
         all_audio_paths, generation_info, "Generation Complete", seed_value_for_ui,
         *final_scores_list, *final_codes_display, *final_accordions, *final_lrcs_list,
         lm_generated_metadata, is_format_caption,
-        {**result.extra_outputs, "lrcs": final_lrcs_list, "subtitles": final_subtitles_list},
+        extra_to_store,
         final_codes_list,
     )
 

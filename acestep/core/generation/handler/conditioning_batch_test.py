@@ -14,7 +14,7 @@ class _Host(ConditioningBatchMixin):
     def __init__(self):
         self.device = "cpu"
         self.dtype = torch.float32
-        self.sample_rate = 48000
+        self.sample_rate = 192000
 
     def _normalize_audio_code_hints(self, audio_code_hints, batch_size: int) -> List[Optional[str]]:
         if audio_code_hints is None:

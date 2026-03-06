@@ -3,8 +3,10 @@
 import math
 import random
 from typing import Optional
+from pathlib import Path
 
 import torch
+import soundfile as sf
 from loguru import logger
 
 
@@ -15,7 +17,9 @@ class IoAudioMixin:
     - Method: ``is_silence`` (provided by ``MemoryUtilsMixin`` in this decomposition).
     """
 
-    def _normalize_audio_to_stereo_48k(self, audio: torch.Tensor, sr: int) -> torch.Tensor:
+    def _normalize_audio_to_stereo_48k(
+        self, audio: torch.Tensor, sr: int
+    ) -> torch.Tensor:
         """Normalize audio tensor to stereo at 48kHz.
 
         Args:
@@ -36,6 +40,7 @@ class IoAudioMixin:
 
         if sr != 48000:
             import torchaudio
+
             audio = torchaudio.transforms.Resample(sr, 48000)(audio)
 
         # Ensure float32 and clamp to [-1, 1]
@@ -70,9 +75,16 @@ class IoAudioMixin:
             return None
 
         try:
-            import torchaudio
-            audio, sr = torchaudio.load(audio_file)
-            logger.debug(f"[process_reference_audio] Reference audio shape: {audio.shape}")
+            # Use soundfile instead of torchaudio to avoid torchcodec dependency
+            audio_np, sr = sf.read(audio_file, dtype="float32")
+            if audio_np.ndim == 1:
+                audio = torch.from_numpy(audio_np).unsqueeze(0)
+            else:
+                audio = torch.from_numpy(audio_np.T)
+
+            logger.debug(
+                f"[process_reference_audio] Reference audio shape: {audio.shape}"
+            )
             logger.debug(f"[process_reference_audio] Reference audio sample rate: {sr}")
             logger.debug(
                 f"[process_reference_audio] Reference audio duration: {audio.shape[-1] / sr:.6f} seconds"
@@ -95,7 +107,9 @@ class IoAudioMixin:
             front_start = random.randint(0, max(0, segment_size - segment_frames))
             front_audio = audio[:, front_start : front_start + segment_frames]
 
-            middle_start = segment_size + random.randint(0, max(0, segment_size - segment_frames))
+            middle_start = segment_size + random.randint(
+                0, max(0, segment_size - segment_frames)
+            )
             middle_audio = audio[:, middle_start : middle_start + segment_frames]
 
             back_start = 2 * segment_size + random.randint(
@@ -109,7 +123,9 @@ class IoAudioMixin:
             return self._to_pcm16(concatenated)
 
         except (OSError, RuntimeError, ValueError) as exc:
-            logger.warning(f"[process_reference_audio] Invalid or unsupported reference audio: {exc}")
+            logger.warning(
+                f"[process_reference_audio] Invalid or unsupported reference audio: {exc}"
+            )
             return None
 
     def process_src_audio(self, audio_file: Optional[str]) -> Optional[torch.Tensor]:
@@ -125,8 +141,12 @@ class IoAudioMixin:
             return None
 
         try:
-            import torchaudio
-            audio, sr = torchaudio.load(audio_file)
+            # Use soundfile instead of torchaudio to avoid torchcodec dependency
+            audio_np, sr = sf.read(audio_file, dtype="float32")
+            if audio_np.ndim == 1:
+                audio = torch.from_numpy(audio_np).unsqueeze(0)
+            else:
+                audio = torch.from_numpy(audio_np.T)
             return self._normalize_audio_to_stereo_48k(audio, sr)
         except (OSError, RuntimeError, ValueError):
             logger.exception("[process_src_audio] Error processing source audio")

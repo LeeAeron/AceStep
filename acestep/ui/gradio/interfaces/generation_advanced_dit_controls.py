@@ -46,6 +46,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 label=t("generation.infer_method_label"),
                 info=t("generation.infer_method_info"),
                 elem_classes=["has-info-container"],
+                visible=False,
             )
         with gr.Row():
             use_adg = gr.Checkbox(
@@ -57,7 +58,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
             )
             shift = gr.Slider(
                 minimum=1.0,
-                maximum=5.0,
+                maximum=8.0,
                 value=ui_config["shift_value"],
                 step=0.1,
                 label=t("generation.shift_label"),

@@ -44,8 +44,8 @@ class MlxVaeEncodeNativeMixin:
         batch_size = audio_nlc.shape[0]
         sample_frames = audio_nlc.shape[1]
 
-        mlx_encode_chunk = 48000 * 30
-        mlx_encode_overlap = 48000 * 2
+        mlx_encode_chunk = 192000 * 30
+        mlx_encode_overlap = 192000 * 2
         if sample_frames <= mlx_encode_chunk:
             chunks_per_sample = 1
         else:
@@ -103,8 +103,8 @@ class MlxVaeEncodeNativeMixin:
             encode_fn = self._resolve_mlx_encode_fn()
 
         sample_frames = audio_nlc.shape[1]
-        mlx_encode_chunk = 48000 * 30
-        mlx_encode_overlap = 48000 * 2
+        mlx_encode_chunk = 192000 * 30
+        mlx_encode_overlap = 192000 * 2
 
         if sample_frames <= mlx_encode_chunk:
             result = encode_fn(audio_nlc)

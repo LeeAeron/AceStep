@@ -1,8 +1,10 @@
 """Foreground batch generation wrapper for UI streaming updates."""
 
+import gc
 import time as time_module
 
 import gradio as gr
+import torch
 from loguru import logger
 
 from acestep.ui.gradio.events.results.batch_management_helpers import (
@@ -51,6 +53,9 @@ def generate_with_batch_management(
 ):
     """Wrap ``generate_with_progress`` with batch queue management state."""
     _ = generation_params_state  # reserved for API compatibility with wiring/state outputs
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     generator = generate_with_progress(
         dit_handler, llm_handler,
         captions, lyrics, bpm, key_scale, time_signature, vocal_language,

@@ -16,7 +16,6 @@ from typing import Any, Generator, Optional, Tuple
 import torch
 import torch.nn as nn
 
-from acestep.training.lora_injection import _unwrap_decoder
 from acestep.training.lora_checkpoint import (
     load_training_checkpoint,
     save_lora_weights,
@@ -168,9 +167,17 @@ def save_adapter_flat(trainer: Any, output_dir: str) -> None:
         lokr_meta = {"lokr_config": module.adapter_config.to_dict()}
         save_lokr_weights(module.lycoris_net, output_dir, metadata=lokr_meta)
     else:
-        decoder = _unwrap_decoder(module.model)
-        if hasattr(decoder, "save_pretrained"):
-            decoder.save_pretrained(output_dir)
+        # Access the decoder directly (PeftModel after LoRA injection,
+        # possibly wrapped by Fabric's _FabricModule after setup).
+        # Do NOT use _unwrap_decoder here -- that function strips the PEFT
+        # wrapper and returns the base DiT model, causing save_pretrained()
+        # to write the full model instead of the adapter-only files.
+        raw_decoder = module.model.decoder
+        # Strip Fabric wrappers only (_forward_module chain).
+        while hasattr(raw_decoder, "_forward_module"):
+            raw_decoder = raw_decoder._forward_module
+        if hasattr(raw_decoder, "save_pretrained"):
+            raw_decoder.save_pretrained(output_dir)
             logger.info("[OK] LoRA adapter saved to %s", output_dir)
         else:
             # Fallback for non-PEFT models

@@ -18,17 +18,19 @@ _FALLBACK_PER_STEP_SEC = 2.5
 
 class ProgressMixin:
     def _get_project_root(self) -> str:
-        """Get project root directory path."""
-        current_file = os.path.abspath(__file__)
-        return os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(
-                        os.path.dirname(current_file)
-                    )
-                )
-            )
-        )
+        """Get project root directory path.
+
+        Returns the directory set by the ``ACESTEP_PROJECT_ROOT`` environment
+        variable when present, otherwise the current working directory.  Using
+        the working directory (rather than ``__file__``) keeps generated cache
+        files and the checkpoints folder next to where the user launched the
+        process, regardless of whether the package was installed via
+        ``pip install .`` or run from source.
+        """
+        env_root = os.environ.get("ACESTEP_PROJECT_ROOT")
+        if env_root:
+            return os.path.abspath(env_root)
+        return os.getcwd()
 
     def _load_progress_estimates(self) -> None:
         """Load persisted diffusion progress estimates if available."""

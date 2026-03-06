@@ -52,6 +52,14 @@ class GenerateMusicRequest(BaseModel):
 
     instruction: str = DEFAULT_DIT_INSTRUCTION
     audio_cover_strength: float = 1.0
+    cover_noise_strength: float = Field(
+        default=0.0,
+        description="Cover noise blending strength (0.0=pure noise, 1.0=closest to source audio). Used for cover/repaint tasks.",
+    )
+    audio_code_string: str = Field(
+        default="",
+        description="User-provided audio semantic codes string for code-control generation. When non-empty, skips LM code generation.",
+    )
     task_type: str = "text2music"
     analysis_only: bool = False
     full_analysis_only: bool = False

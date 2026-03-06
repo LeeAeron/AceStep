@@ -40,6 +40,19 @@ class ReleaseTaskParamParserTests(unittest.TestCase):
         self.assertAlmostEqual(7.25, parser.float("guidance_scale"))
         self.assertTrue(parser.bool("use_random_seed"))
 
+    def test_cover_noise_strength_and_audio_code_string_aliases_are_resolved(self):
+        """Parser should resolve camelCase aliases for the new fields."""
+
+        parser = RequestParser({"coverNoiseStrength": "0.5", "audioCodeString": "<|code|>"})
+        self.assertAlmostEqual(0.5, parser.float("cover_noise_strength"))
+        self.assertEqual("<|code|>", parser.str("audio_code_string"))
+
+    def test_audio_codes_alias_resolves_to_audio_code_string(self):
+        """Legacy `audio_codes` key should resolve via audio_code_string alias list."""
+
+        parser = RequestParser({"audio_codes": "<|audio_code_42|>"})
+        self.assertEqual("<|audio_code_42|>", parser.str("audio_code_string"))
+
     def test_non_dict_param_obj_json_is_ignored(self):
         """Parser should ignore parsed param_obj JSON values that are not dictionaries."""
 

@@ -61,7 +61,7 @@ def build_output_controls(
         with gr.Row():
             enable_normalization = gr.Checkbox(
                 label=t("generation.enable_normalization"),
-                value=params.get("enable_normalization", True) if service_pre_initialized else True,
+                value=params.get("enable_normalization", False) if service_pre_initialized else True,
                 info=t("generation.enable_normalization_info"),
                 elem_classes=["has-info-container"],
             )
@@ -70,7 +70,7 @@ def build_output_controls(
                 minimum=-10.0,
                 maximum=0.0,
                 step=0.1,
-                value=params.get("normalization_db", -1.0) if service_pre_initialized else -1.0,
+                value=params.get("normalization_db", -3.0) if service_pre_initialized else -1.0,
                 info=t("generation.normalization_db_info"),
                 elem_classes=["has-info-container"],
             )

@@ -34,7 +34,7 @@ class IoAudioMixinTests(unittest.TestCase):
         """Mono input should duplicate to stereo and clamp values."""
         host = _Host()
         audio = torch.tensor([[2.0, -2.0, 0.5]], dtype=torch.float32)
-        result = host._normalize_audio_to_stereo_48k(audio, 48000)
+        result = host._normalize_audio_to_stereo_48k(audio, 192000)
 
         self.assertEqual(tuple(result.shape), (2, 3))
         self.assertTrue(torch.all(result <= 1.0))
@@ -45,7 +45,7 @@ class IoAudioMixinTests(unittest.TestCase):
         host = _Host()
         fake_np = np.array([0.1, -0.1, 0.2], dtype=np.float32)
         fake_sf = types.ModuleType("soundfile")
-        fake_sf.read = lambda *_args, **_kwargs: (fake_np, 32000)
+        fake_sf.read = lambda *_args, **_kwargs: (fake_np, 192000)
 
         with patch.dict(sys.modules, {"soundfile": fake_sf}):
             with patch.object(host, "_normalize_audio_to_stereo_48k", return_value=torch.zeros(2, 3)) as norm:
@@ -66,7 +66,7 @@ class IoAudioMixinTests(unittest.TestCase):
         """Reference audio should short-circuit for silent input."""
         host = _Host()
         silent = torch.zeros(2, 16, dtype=torch.float32)
-        fake_ta = _fake_torchaudio_module(lambda *_args, **_kwargs: (silent, 48000))
+        fake_ta = _fake_torchaudio_module(lambda *_args, **_kwargs: (silent, 192000))
         with patch.dict(sys.modules, {"torchaudio": fake_ta}):
             result = host.process_reference_audio("silent.wav")
         self.assertIsNone(result)
@@ -76,14 +76,14 @@ class IoAudioMixinTests(unittest.TestCase):
         host = _Host()
         base = torch.linspace(-1.0, 1.0, 1_800_000, dtype=torch.float32)
         audio = torch.stack([base, -base], dim=0)
-        fake_ta = _fake_torchaudio_module(lambda *_args, **_kwargs: (audio, 48000))
+        fake_ta = _fake_torchaudio_module(lambda *_args, **_kwargs: (audio, 192000))
 
         with patch.dict(sys.modules, {"torchaudio": fake_ta}):
             with patch("acestep.core.generation.handler.io_audio.random.randint", side_effect=[10, 20, 30]):
                 result = host.process_reference_audio("ref.wav")
 
         self.assertIsNotNone(result)
-        segment_frames = 10 * 48000
+        segment_frames = 10 * 192000
         expected = torch.cat(
             [
                 audio[:, 10 : 10 + segment_frames],

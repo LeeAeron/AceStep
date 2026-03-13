@@ -108,6 +108,8 @@ def register_generation_run_handlers(context: GenerationWiringContext) -> None:
             generation_section["complete_track_classes"],
             generation_section["enable_normalization"],
             generation_section["normalization_db"],
+            generation_section["fade_in_duration"],
+            generation_section["fade_out_duration"],
             generation_section["latent_shift"],
             generation_section["latent_rescale"],
             generation_section["autogen_checkbox"],

@@ -15,6 +15,51 @@ import sys
 import time
 import webbrowser
 
+
+def setup_ffmpeg_path():
+    """Auto-detect FFmpeg in project directory or system PATH."""
+    import os
+    import sys
+    
+    if sys.platform != "win32":
+        return
+
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    possible_paths = [
+        os.path.join(project_root, "ffmpeg", "bin"),
+        os.path.join(project_root, "ffmpeg", "lib"),
+        os.path.join(project_root, "..", "ffmpeg", "bin"),
+        os.path.join(project_root, "..", "ffmpeg", "lib"),
+        os.path.join(os.path.dirname(project_root), "ffmpeg", "bin"),
+        os.path.join(os.path.dirname(project_root), "ffmpeg", "lib"),
+    ]
+
+    ffmpeg_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            dll_files = [f for f in os.listdir(path) if f.endswith('.dll') and 'av' in f]
+            if dll_files:
+                ffmpeg_path = path
+                break
+    
+    if ffmpeg_path:
+        os.environ["PATH"] = ffmpeg_path + os.pathsep + os.environ.get("PATH", "")
+
+        if hasattr(os, 'add_dll_directory'):
+            os.add_dll_directory(ffmpeg_path)
+        
+        print(f"✓ FFmpeg found: {ffmpeg_path}")
+        return True
+    else:
+        print("⚠ FFmpeg not found in project, using system PATH")
+        return False
+
+setup_ffmpeg_path()
+
+# Allow Gradio to access any path (disable path security restrictions)
+os.environ["GRADIO_ALLOW_ALL_PATHS"] = "1"
+
 # Load environment variables from .env file at most once per process to avoid
 # epoch-boundary stalls (e.g. on Windows when Gradio yields during training)
 _env_loaded = False  # module-level so we never reload .env in the same process
@@ -158,7 +203,7 @@ def create_demo(init_params=None, language="en"):
                           'init_llm', 'lm_model_path', 'backend', 'use_flash_attention',
                           'offload_to_cpu', 'offload_dit_to_cpu', 'init_status',
                           'dit_handler', 'llm_handler' (initialized handlers if pre-initialized),
-                          'language' (UI language code)
+                          'language' (UI language code), 'tensor_output_dir' (path to tensors)
         language: UI language code ('en', 'zh', 'ja', 'ru', default: 'en')
     
     Returns:
@@ -178,6 +223,9 @@ def create_demo(init_params=None, language="en"):
 
     dataset_handler = DatasetHandler()  # Dataset handler
 
+    # Get tensor_output_dir from init_params for synchronization between tabs
+    tensor_output_dir = init_params.get("tensor_output_dir", "") if init_params else ""
+
     # Create Gradio interface with all handlers and initialization parameters
     demo = create_gradio_interface(
         dit_handler,
@@ -193,6 +241,10 @@ def create_demo(init_params=None, language="en"):
 def main():
     """Main entry function"""
     import argparse
+
+    # Remove path restrictions for local file access
+    from acestep.training.path_safety import set_safe_root
+    set_safe_root("/")  # Allow any path on Linux/Mac
 
     # Detect GPU memory and get configuration
     gpu_config = get_gpu_config()
@@ -255,6 +307,12 @@ def main():
     output_dir = output_dir.replace("\\", "/")
     os.makedirs(output_dir, exist_ok=True)
     print(f"Output directory: {output_dir}")
+
+    # Define the default path to tensors (for synchronization between LoRA/LoKr/Dataset tabs)
+    default_tensor_dir = os.path.join(project_root, "datasets", "preprocessed_tensors")
+    default_tensor_dir = default_tensor_dir.replace("\\", "/")
+    os.makedirs(default_tensor_dir, exist_ok=True)
+    print(f"Default tensor directory: {default_tensor_dir}")
 
     # Initialize i18n with default language (en)
     get_i18n()
@@ -642,6 +700,7 @@ def main():
                 "gpu_config": gpu_config,  # Pass GPU config to UI
                 "output_dir": output_dir,  # Pass output dir to UI
                 "default_batch_size": args.batch_size,  # Pass user-specified default batch size
+                "tensor_output_dir": default_tensor_dir,  # the way to tensors for synchronization
             }
 
             print("Service initialization completed successfully!")
@@ -656,6 +715,7 @@ def main():
                 "language": args.language,
                 "output_dir": output_dir,  # Pass output dir to UI
                 "default_batch_size": args.batch_size,  # Pass user-specified default batch size
+                "tensor_output_dir": default_tensor_dir,  # the way to tensors for synchronization
             }
 
         demo = create_demo(init_params=init_params, language=args.language)
@@ -677,10 +737,34 @@ def main():
             auth = (args.auth_username, args.auth_password)
             print("Authentication enabled")
 
-        allowed_paths = [output_dir]
+        # Allow access to all drives and common mount points
+        # WARNING: Only for local use! Allows access to entire filesystem.
+        allowed_paths = [output_dir, "/"]
+        
+        if sys.platform == "win32":
+            # Windows: add all existing drive letters
+            for drive in range(ord('A'), ord('Z')+1):
+                drive_path = f"{chr(drive)}:/"
+                if os.path.exists(drive_path):
+                    allowed_paths.append(drive_path)
+        else:
+            # Linux/Mac: common external mount points
+            allowed_paths.extend(["/mnt", "/media", "/home"])
+
+        # Add paths from GRADIO_ALLOWED_PATHS environment variable
+        env_paths = os.environ.get("GRADIO_ALLOWED_PATHS", "")
+        if env_paths:
+            for p in env_paths.split(","):
+                p = p.strip().replace("\\", "/")
+                if p and p not in allowed_paths:
+                    allowed_paths.append(p)
+
+        # Add user-specified paths from command line (--allowed-path)
         for p in args.allowed_path:
             if p and p not in allowed_paths:
-                allowed_paths.append(p)
+                allowed_paths.append(p.replace("\\", "/"))
+
+        print(f"Allowed paths for Gradio: {allowed_paths}")
 
         # Enable API endpoints if requested
         if args.enable_api:

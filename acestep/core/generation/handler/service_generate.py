@@ -21,7 +21,8 @@ class ServiceGenerateMixin:
     def service_generate(
         self,
         captions: Union[str, List[str]],
-        lyrics: Union[str, List[str]],
+        global_captions: Optional[List[str]] = None,
+        lyrics: Union[str, List[str]] = "",
         keys: Optional[Union[str, List[str]]] = None,
         target_wavs: Optional[torch.Tensor] = None,
         refer_audios: Optional[List[List[torch.Tensor]]] = None,
@@ -43,6 +44,7 @@ class ServiceGenerateMixin:
         audio_code_hints: Optional[Union[str, List[str]]] = None,
         infer_method: str = "ode",
         timesteps: Optional[List[float]] = None,
+        chunk_mask_modes: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Generate music latents and metadata from text/audio conditioning inputs.
 
@@ -95,6 +97,7 @@ class ServiceGenerateMixin:
         )
         batch = self._prepare_batch(
             captions=normalized["captions"],
+            global_captions=global_captions,
             lyrics=normalized["lyrics"],
             keys=normalized["keys"],
             target_wavs=target_wavs,
@@ -107,6 +110,7 @@ class ServiceGenerateMixin:
             audio_code_hints=normalized["audio_code_hints"],
             audio_cover_strength=audio_cover_strength,
             cover_noise_strength=cover_noise_strength,
+            chunk_mask_modes=chunk_mask_modes,
         )
         payload = self._unpack_service_processed_data(self.preprocess_batch(batch))
         seed_param = self._resolve_service_seed_param(normalized["seed_list"])

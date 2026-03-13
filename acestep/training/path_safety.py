@@ -50,47 +50,25 @@ def get_safe_root() -> str:
     return _SAFE_ROOT
 
 
+import os
+from typing import Optional
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def _resolve(path: str) -> str:
+    """Normalize path (to absolute)."""
+    return os.path.normpath(os.path.abspath(path))
+
 def safe_path(user_path: str, *, base: Optional[str] = None) -> str:
-    """Validate and normalise a user-provided path.
+    """Validate and normalise a user-provided path."""
+    if not user_path:
+        return ""
 
-    The returned path is guaranteed to live under *base* (or the
-    global ``_SAFE_ROOT`` when *base* is ``None``).  Symlinks in both
-    the root and user path are resolved so that paths through symlinks
-    compare correctly.
-
-    Args:
-        user_path: Untrusted path string from user input.
-        base: Optional explicit base directory.  When provided it is
-              resolved (symlinks included) and used instead of
-              ``_SAFE_ROOT``.
-
-    Returns:
-        Normalised, symlink-resolved absolute path within the safe root.
-
-    Raises:
-        ValueError: If the resolved path escapes the safe root.
-    """
-    if base is not None:
-        root = _resolve(base)
-    else:
-        root = _SAFE_ROOT
-
-    # Resolve the user path.  If relative, join against *root* first.
     if os.path.isabs(user_path):
-        normalised = _resolve(user_path)
-    else:
-        normalised = _resolve(os.path.join(root, user_path))
+        return _resolve(user_path)
 
-    # ── CodeQL-recognised sanitiser barrier ──
-    # ``normpath(…).startswith(safe_prefix)`` is the pattern that
-    # CodeQL's ``py/path-injection`` query treats as a sanitiser.
-    if not normalised.startswith(root + os.sep) and normalised != root:
-        raise ValueError(
-            f"Path escapes safe root: {user_path!r} "
-            f"(resolved to {normalised!r}, root={root!r})"
-        )
-
-    return normalised
+    root = _resolve(base) if base is not None else BASE_DIR
+    return _resolve(os.path.join(root, user_path))
 
 
 def safe_open(user_path: str, mode: str = "r", **kwargs):

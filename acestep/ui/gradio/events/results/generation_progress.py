@@ -52,6 +52,8 @@ def generate_with_progress(
     lm_batch_chunk_size,
     enable_normalization,
     normalization_db,
+    fade_in_duration,
+    fade_out_duration,
     latent_shift,
     latent_rescale,
     progress=gr.Progress(track_tqdm=True),
@@ -141,6 +143,8 @@ def generate_with_progress(
         use_constrained_decoding=True,
         enable_normalization=enable_normalization,
         normalization_db=normalization_db,
+        fade_in_duration=fade_in_duration if fade_in_duration else 0.0,
+        fade_out_duration=fade_out_duration if fade_out_duration else 0.0,
         latent_shift=latent_shift,
         latent_rescale=latent_rescale,
     )

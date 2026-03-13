@@ -38,6 +38,7 @@ def build_generate_music_request(
 
     payload = dict(
         prompt=parser.str("prompt"),
+        global_caption=parser.str("global_caption"),
         lyrics=parser.str("lyrics"),
         thinking=parser.bool("thinking"),
         analysis_only=parser.bool("analysis_only"),
@@ -54,7 +55,7 @@ def build_generate_music_request(
         inference_steps=parser.int("inference_steps", 8),
         guidance_scale=parser.float("guidance_scale", 7.0),
         use_random_seed=parser.bool("use_random_seed", True),
-        seed=parser.int("seed", -1),
+        seed=parser.get("seed", -1),
         batch_size=parser.int("batch_size"),
         repainting_start=parser.float("repainting_start", 0.0),
         repainting_end=parser.float("repainting_end"),
@@ -65,6 +66,7 @@ def build_generate_music_request(
         reference_audio_path=reference_audio,
         src_audio_path=src_audio,
         task_type=parser.str("task_type", "text2music"),
+        chunk_mask_mode=parser.str("chunk_mask_mode", "auto"),
         use_adg=parser.bool("use_adg"),
         cfg_interval_start=parser.float("cfg_interval_start", 0.0),
         cfg_interval_end=parser.float("cfg_interval_end", 1.0),

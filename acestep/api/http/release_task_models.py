@@ -16,7 +16,8 @@ class GenerateMusicRequest(BaseModel):
     clients remain compatible while route handling is decomposed.
     """
 
-    prompt: str = Field(default="", description="Text prompt describing the music")
+    prompt: str = Field(default="", description="Text prompt describing the music (local/per-track description for lego SFT)")
+    global_caption: str = Field(default="", description="Global song description for SFT-stems lego tasks (full song context)")
     lyrics: str = Field(default="", description="Lyric text")
 
     # New API semantics:
@@ -61,6 +62,7 @@ class GenerateMusicRequest(BaseModel):
         description="User-provided audio semantic codes string for code-control generation. When non-empty, skips LM code generation.",
     )
     task_type: str = "text2music"
+    chunk_mask_mode: Literal["explicit", "auto"] = "auto"
     analysis_only: bool = False
     full_analysis_only: bool = False
 

@@ -9,7 +9,7 @@ from loguru import logger
 # Maximum wall-clock seconds to wait for service_generate before declaring a hang.
 # Generous default: most generations finish in 30-120s, but large batches on slow
 # GPUs can take several minutes.  Override via ACESTEP_GENERATION_TIMEOUT env var.
-_DEFAULT_GENERATION_TIMEOUT = int(os.environ.get("ACESTEP_GENERATION_TIMEOUT", "600"))
+_DEFAULT_GENERATION_TIMEOUT = int(os.environ.get("ACESTEP_GENERATION_TIMEOUT", "6000"))
 
 
 class GenerateMusicExecuteMixin:

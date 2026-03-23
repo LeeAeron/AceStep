@@ -140,6 +140,10 @@ class GenerationParams:
     repainting_start: float = 0.0
     repainting_end: float = -1
     chunk_mask_mode: str = "auto"  # "explicit" = 0/1 mask from repaint range; "auto" = all 2.0 (model decides)
+    repaint_latent_crossfade_frames: int = 10  # latent-level boundary blend width (25Hz frames, 10≈0.4s)
+    repaint_wav_crossfade_sec: float = 0.0  # waveform-level splice crossfade (seconds, 0=hard cut)
+    repaint_mode: str = "balanced"  # "conservative", "balanced", or "aggressive"
+    repaint_strength: float = 0.5  # 0.0=aggressive, 1.0=conservative (balanced mode only)
     audio_cover_strength: float = 1.0
     cover_noise_strength: float = 0.0  # 0=pure noise (no cover), 1=closest to src audio
 
@@ -388,9 +392,11 @@ def generate_music(
         actual_seed_list, _ = dit_handler.prepare_seeds(actual_batch_size, seed_for_generation, config.use_random_seed)
 
         # LM-based Chain-of-Thought reasoning
-        # Skip LM for cover/repaint tasks - these tasks use reference/src audio directly
-        # and don't need LM to generate audio codes
-        skip_lm_tasks = {"cover", "repaint"}
+        # Skip LM for cover/repaint/extract tasks - these tasks use reference/src audio directly
+        # and don't need LM to generate audio codes or metadata.
+        # For extract tasks, LLM-generated captions can conflict with the extract instruction
+        # and cause the DiT model to reconstruct input audio instead of extracting stems.
+        skip_lm_tasks = {"cover", "repaint", "extract"}
         
         # Determine if we should use LLM
         # LLM is needed for:
@@ -573,11 +579,11 @@ def generate_music(
             if params.use_cot_language:
                 dit_input_vocal_language = lm_generated_metadata.get("vocal_language", dit_input_vocal_language)
 
-        # Repaint/cover: no LM run, so conditioning must come from params (caption + lyrics from GUI).
-        if params.task_type in ("repaint", "cover"):
+        # Repaint/cover/extract: no LM run, so conditioning must come from params (caption + lyrics from GUI).
+        if params.task_type in ("repaint", "cover", "extract"):
             dit_input_caption = params.caption or dit_input_caption
             dit_input_lyrics = params.lyrics if params.lyrics is not None else dit_input_lyrics
-            logger.info(f"[generate_music] Repaint/Cover task: using params.caption='{params.caption}', params.lyrics='{params.lyrics}'")
+            logger.info(f"[generate_music] {params.task_type} task: using params.caption='{params.caption}', params.lyrics='{params.lyrics}'")
             logger.info(f"[generate_music] Final inputs: dit_input_caption='{dit_input_caption}', dit_input_lyrics='{dit_input_lyrics}'")
 
         # Phase 2: DiT music generation
@@ -616,6 +622,14 @@ def generate_music(
             latent_shift=params.latent_shift,
             latent_rescale=params.latent_rescale,
             chunk_mask_mode=getattr(params, "chunk_mask_mode", "auto"),
+            repaint_latent_crossfade_frames=getattr(
+                params, "repaint_latent_crossfade_frames", 10,
+            ),
+            repaint_wav_crossfade_sec=getattr(
+                params, "repaint_wav_crossfade_sec", 0.0,
+            ),
+            repaint_mode=getattr(params, "repaint_mode", "balanced"),
+            repaint_strength=getattr(params, "repaint_strength", 0.5),
             progress=progress,
         )
 
@@ -641,8 +655,8 @@ def generate_music(
         # Get base params dictionary
         base_params_dict = params.to_dict()
 
+        # Save audio files using AudioSaver (format from config)
         audio_format = config.audio_format if config.audio_format else "wav32"
-
         audio_saver = AudioSaver(default_format=audio_format)
 
         # Use handler's temp_dir for saving files

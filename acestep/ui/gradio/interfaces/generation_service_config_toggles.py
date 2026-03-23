@@ -54,6 +54,7 @@ def build_service_toggles(
             value=params.get("init_llm", gpu_config.force_lm_enabled if hasattr(gpu_config, "force_lm_enabled") else init_lm_default),
             info=lm_info_text,
             interactive=True,
+            elem_classes=["has-info-container"],
         )
 
         flash_attn_available = dit_handler.is_flash_attention_available(device_value)
@@ -120,10 +121,9 @@ def build_service_init_controls(service_pre_initialized: bool, params: dict[str,
     """
 
     init_btn = gr.Button(t("service.init_btn"), variant="primary", size="lg")
-    init_status = gr.Textbox(
-        label=t("service.status_label"),
-        interactive=False,
-        lines=3,
-        value=params.get("init_status", "") if service_pre_initialized else "",
-    )
+    with gr.Row():
+        init_status = gr.HTML(
+            value=f"<pre>{params.get('init_status', '') if service_pre_initialized else ''}</pre>"
+        )
+
     return {"init_btn": init_btn, "init_status": init_status}

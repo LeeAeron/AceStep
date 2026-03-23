@@ -136,7 +136,7 @@ def compute_mode_ui_updates(mode: str, llm_handler=None, previous_mode: str = "C
         gr.update(visible=show_custom_group),              # 1: custom_mode_group
         generate_btn_update,                               # 2: generate_btn
         False,                                             # 3: simple_sample_created
-        gr.Accordion(visible=show_optional, open=False),   # 4: optional_params_accordion
+        gr.update(visible=show_optional, open=False),       # 4: optional_params_accordion
         gr.update(value=task_type, elem_classes=["has-info-container"]),  # 5: task_type
         gr.update(visible=show_src_audio),                 # 6: src_audio_row
         gr.update(visible=show_repainting),                # 7: repainting_group
@@ -165,7 +165,9 @@ def compute_mode_ui_updates(mode: str, llm_handler=None, previous_mode: str = "C
         repainting_header_update,                          # 30: repainting_header_html
         repainting_start_update,                           # 31: repainting_start
         repainting_end_update,                             # 32: repainting_end
-        mode,                                              # 33: previous_generation_mode
+        gr.skip(),                                         # 33: repaint_mode
+        gr.skip(),                                         # 34: repaint_strength
+        mode,                                              # 35: previous_generation_mode
         gr.update(visible=is_cover),                       # 34: remix_help_group
         gr.update(visible=(is_extract or is_lego)),        # 35: extract_help_group
         gr.update(visible=is_complete),                    # 36: complete_help_group

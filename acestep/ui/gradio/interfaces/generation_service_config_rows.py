@@ -120,9 +120,9 @@ def build_model_device_controls(
             info=t("service.model_path_info"),
             elem_classes=["has-info-container"],
         )
-        device_value = params.get("device", "auto") if service_pre_initialized else "auto"
+        device_value = params.get("device", "cuda") if service_pre_initialized else "cpu"
         device = gr.Dropdown(
-            choices=["auto", "cuda", "mps", "xpu", "cpu"],
+            choices=["cuda", "cpu"],
             value=device_value,
             label=t("service.device_label"),
             info=t("service.device_info"),

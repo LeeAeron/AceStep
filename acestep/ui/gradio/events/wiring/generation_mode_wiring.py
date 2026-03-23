@@ -6,8 +6,32 @@ This module contains mode-switch and simple-mode related handlers to keep
 
 from typing import Any, Sequence
 
+import gradio as gr
+
 from .. import generation_handlers as gen_h
 from .context import GenerationWiringContext
+
+
+def _on_repaint_mode_change(mode, current_strength, memory):
+    """Update slider value and interactivity when repaint mode changes."""
+    if mode == "conservative":
+        new_memory = current_strength if 0.0 < current_strength < 1.0 else memory
+        return gr.update(value=0.0, interactive=False), new_memory
+    if mode == "aggressive":
+        new_memory = current_strength if 0.0 < current_strength < 1.0 else memory
+        return gr.update(value=1.0, interactive=False), new_memory
+    return gr.update(value=memory, interactive=True), memory
+
+
+def _on_repaint_strength_change(strength, current_mode):
+    """Auto-switch mode when slider hits boundary values."""
+    if strength == 0.0 and current_mode != "conservative":
+        return gr.update(value="conservative"), gr.update(interactive=False)
+    if strength == 1.0 and current_mode != "aggressive":
+        return gr.update(value="aggressive"), gr.update(interactive=False)
+    if current_mode != "balanced" and 0.0 < strength < 1.0:
+        return gr.update(value="balanced"), gr.update(interactive=True)
+    return gr.skip(), gr.skip()
 
 
 def register_generation_mode_handlers(
@@ -21,6 +45,17 @@ def register_generation_mode_handlers(
     generation_section = context.generation_section
     results_section = context.results_section
     llm_handler = context.llm_handler
+
+    # Shared handler for mode-change and initial page load — extracted to
+    # avoid duplicating the lambda and to keep both call sites in sync.
+    def _handle_mode_change(mode: str, prev: str | None):
+        """Proxy mode-change handling for both .change() and .load() events."""
+        return gen_h.handle_generation_mode_change(mode, prev, llm_handler)
+
+    mode_change_inputs = [
+        generation_section["generation_mode"],
+        generation_section["previous_generation_mode"],
+    ]
 
     # ========== Generation Mode Change ==========
     generation_section["generation_mode"].change(
@@ -112,4 +147,29 @@ def register_generation_mode_handlers(
         fn=gen_h.uncheck_auto_for_populated_fields,
         inputs=list(auto_checkbox_inputs),
         outputs=list(auto_checkbox_outputs),
+    )
+
+    # ========== Repaint Mode <-> Strength Bidirectional Sync ==========
+    generation_section["repaint_mode"].change(
+        fn=_on_repaint_mode_change,
+        inputs=[
+            generation_section["repaint_mode"],
+            generation_section["repaint_strength"],
+            generation_section["repaint_strength_memory"],
+        ],
+        outputs=[
+            generation_section["repaint_strength"],
+            generation_section["repaint_strength_memory"],
+        ],
+    )
+    generation_section["repaint_strength"].change(
+        fn=_on_repaint_strength_change,
+        inputs=[
+            generation_section["repaint_strength"],
+            generation_section["repaint_mode"],
+        ],
+        outputs=[
+            generation_section["repaint_mode"],
+            generation_section["repaint_strength"],
+        ],
     )

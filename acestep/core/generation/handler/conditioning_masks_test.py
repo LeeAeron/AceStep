@@ -16,7 +16,7 @@ class _Host(ConditioningMaskMixin):
 
     def __init__(self):
         self.device = "cpu"
-        self.sample_rate = 48000
+        self.sample_rate = 192000
 
 
 def _make_host():
@@ -40,7 +40,7 @@ def _build(
     if audio_code_hints is None:
         audio_code_hints = [None] * batch_size
     if target_wavs is None:
-        target_wavs = torch.ones(batch_size, 2, 48000)
+        target_wavs = torch.ones(batch_size, 2, 192000)
     if target_latents is None:
         # Non-zero so we can detect if they were replaced with silence
         target_latents = torch.ones(batch_size, max_latent_length, 16)
@@ -76,12 +76,12 @@ class ConditioningMaskLegoBehaviorTests(unittest.TestCase):
         host = _make_host()
         target_latents = torch.ones(1, 100, 16) * 2.5
         lego_instruction = "Generate the GUITAR track based on the audio context:"
-        chunk_masks, spans, is_covers, src_latents = _build(
+        chunk_masks, spans, is_covers, src_latents, _rm = _build(
             host,
             instructions=[lego_instruction],
             target_latents=target_latents,
             repainting_start=[0.0],
-            repainting_end=[4.0],  # 4 s at sample_rate=48000, stride=1920 → latents 0..100
+            repainting_end=[4.0],  # 4 s at sample_rate=192000, stride=1920 → latents 0..100
         )
         self.assertTrue(
             torch.allclose(src_latents, target_latents),
@@ -94,7 +94,7 @@ class ConditioningMaskLegoBehaviorTests(unittest.TestCase):
         host = _make_host()
         target_latents = torch.ones(1, 100, 16) * 1.7
         lego_default_instruction = "Generate the track based on the audio context:"
-        chunk_masks, spans, is_covers, src_latents = _build(
+        chunk_masks, spans, is_covers, src_latents, _rm = _build(
             host,
             instructions=[lego_default_instruction],
             target_latents=target_latents,
@@ -114,11 +114,11 @@ class ConditioningMaskLegoBehaviorTests(unittest.TestCase):
         """
         host = _make_host()
         target_latents = torch.ones(1, 100, 16) * 2.5
-        chunk_masks, spans, is_covers, src_latents = _build(
+        chunk_masks, spans, is_covers, src_latents, _rm = _build(
             host,
             target_latents=target_latents,
             repainting_start=[0.0],
-            repainting_end=[4.0],  # 4 seconds at sample_rate=48000, stride=1920 → latents 0..100
+            repainting_end=[4.0],  # 4 seconds at sample_rate=192000, stride=1920 → latents 0..100
         )
         # With full-range repainting the src_latents region should be silenced
         start_l, end_l = spans[0][1], spans[0][2]
@@ -133,8 +133,8 @@ class ConditioningMaskLegoBehaviorTests(unittest.TestCase):
         """Partial repaint leaves source audio outside the mask intact."""
         host = _make_host()
         target_latents = torch.ones(1, 100, 16) * 3.0
-        # Repaint 1s-2s (roughly latents 25-50 at 48000/1920=25 latents/sec)
-        chunk_masks, spans, is_covers, src_latents = _build(
+        # Repaint 1s-2s (roughly latents 25-50 at 192000/1920=25 latents/sec)
+        chunk_masks, spans, is_covers, src_latents, _rm = _build(
             host,
             target_latents=target_latents,
             repainting_start=[1.0],
@@ -176,7 +176,7 @@ class ConditioningMaskLegoBehaviorTests(unittest.TestCase):
         target_latents = torch.ones(1, 100, 16) * 2.5
         # Use mixed-case version of the instruction
         mixed_case_instruction = "Generate the GUITAR Track BASED ON THE AUDIO CONTEXT:"
-        chunk_masks, spans, is_covers, src_latents = _build(
+        chunk_masks, spans, is_covers, src_latents, _rm = _build(
             host,
             instructions=[mixed_case_instruction],
             target_latents=target_latents,
@@ -193,7 +193,7 @@ class ConditioningMaskLegoBehaviorTests(unittest.TestCase):
         host = _make_host()
         target_latents = torch.ones(1, 100, 16) * 2.5
         # Empty instructions list — instructions[i] lookup falls back to ""
-        chunk_masks, spans, is_covers, src_latents = _build(
+        chunk_masks, spans, is_covers, src_latents, _rm = _build(
             host,
             instructions=[],
             target_latents=target_latents,
@@ -209,7 +209,7 @@ class ConditioningMaskLegoBehaviorTests(unittest.TestCase):
         host = _make_host()
         target_latents = torch.ones(1, 100, 16) * 2.5
         repaint_instruction = "Repaint the mask area based on the given conditions:"
-        chunk_masks, spans, is_covers, src_latents = _build(
+        chunk_masks, spans, is_covers, src_latents, _rm = _build(
             host,
             instructions=[repaint_instruction],
             target_latents=target_latents,
@@ -225,8 +225,8 @@ class ConditioningMaskLegoBehaviorTests(unittest.TestCase):
     def test_no_source_audio_produces_silence_latents(self):
         """Without source audio, src_latents should be silence (text2music behavior)."""
         host = _make_host()
-        target_wavs = torch.zeros(1, 2, 48000)
-        chunk_masks, spans, is_covers, src_latents = _build(
+        target_wavs = torch.zeros(1, 2, 192000)
+        chunk_masks, spans, is_covers, src_latents, _rm = _build(
             host,
             target_wavs=target_wavs,
             repainting_start=None,

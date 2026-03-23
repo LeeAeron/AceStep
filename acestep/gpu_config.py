@@ -105,6 +105,19 @@ def is_rocm_available() -> bool:
         return False
 
 
+def cuda_supports_bfloat16(device_index: int | None = None) -> bool:
+    """Return whether a CUDA device supports native bfloat16 kernels."""
+    try:
+        import torch
+
+        if not torch.cuda.is_available():
+            return False
+        major, _ = torch.cuda.get_device_capability(device_index)
+        return major >= 8
+    except Exception:
+        return False
+
+
 # ===========================================================================
 # Empirical VRAM measurements (GB) -- model weights only, bf16 precision
 # These values should be calibrated using scripts/profile_vram.py
@@ -194,8 +207,8 @@ GPU_TIER_CONFIGS = {
         # VAE decode falls back to CPU.  Keep durations moderate.
         "max_duration_with_lm": 600,  # 4 minutes
         "max_duration_without_lm": 600,  # 6 minutes
-        "max_batch_size_with_lm": 1,
-        "max_batch_size_without_lm": 1,
+        "max_batch_size_with_lm": 8,
+        "max_batch_size_without_lm": 8,
         "init_lm_default": True,
         "available_lm_models": ["acestep-5Hz-lm-0.6B", "acestep-5Hz-lm-1.7B", "acestep-5Hz-lm-4B"],
         "recommended_lm_model": "acestep-5Hz-lm-1.7B",
@@ -213,8 +226,8 @@ GPU_TIER_CONFIGS = {
         # Duration barely affects peak VRAM (latent tensor is <2MB even at 10min).
         "max_duration_with_lm": 600,  # 8 minutes
         "max_duration_without_lm": 600,  # 10 minutes (max supported)
-        "max_batch_size_with_lm": 1,
-        "max_batch_size_without_lm": 1,
+        "max_batch_size_with_lm": 8,
+        "max_batch_size_without_lm": 8,
         "init_lm_default": True,
         "available_lm_models": ["acestep-5Hz-lm-0.6B", "acestep-5Hz-lm-1.7B", "acestep-5Hz-lm-4B"],
         "recommended_lm_model": "acestep-5Hz-lm-1.7B",
@@ -232,8 +245,8 @@ GPU_TIER_CONFIGS = {
         # With CPU offload, DiT is offloaded before LM runs → vllm can use freed VRAM.
         "max_duration_with_lm": 600,  # 8 minutes
         "max_duration_without_lm": 600,  # 10 minutes (max supported)
-        "max_batch_size_with_lm": 1,
-        "max_batch_size_without_lm": 1,
+        "max_batch_size_with_lm": 8,
+        "max_batch_size_without_lm": 8,
         "init_lm_default": True,
         "available_lm_models": ["acestep-5Hz-lm-0.6B", "acestep-5Hz-lm-1.7B", "acestep-5Hz-lm-4B"],
         "recommended_lm_model": "acestep-5Hz-lm-1.7B",
@@ -250,8 +263,8 @@ GPU_TIER_CONFIGS = {
         # Offload VAE/TextEnc.  Plenty of room for inference activations.
         "max_duration_with_lm": 600,  # 8 minutes
         "max_duration_without_lm": 600,  # 10 minutes (max supported)
-        "max_batch_size_with_lm": 1,
-        "max_batch_size_without_lm": 1,
+        "max_batch_size_with_lm": 8,
+        "max_batch_size_without_lm": 8,
         "init_lm_default": True,
         "available_lm_models": ["acestep-5Hz-lm-0.6B", "acestep-5Hz-lm-1.7B", "acestep-5Hz-lm-4B"],
         "recommended_lm_model": "acestep-5Hz-lm-1.7B",
@@ -268,8 +281,8 @@ GPU_TIER_CONFIGS = {
         # VAE decode is batch-sequential so batch size doesn't affect VAE VRAM.
         "max_duration_with_lm": 600,  # 8 minutes
         "max_duration_without_lm": 600,  # 10 minutes (max supported)
-        "max_batch_size_with_lm": 1,
-        "max_batch_size_without_lm": 1,
+        "max_batch_size_with_lm": 8,
+        "max_batch_size_without_lm": 8,
         "init_lm_default": True,
         "available_lm_models": ["acestep-5Hz-lm-0.6B", "acestep-5Hz-lm-1.7B", "acestep-5Hz-lm-4B"],
         "recommended_lm_model": "acestep-5Hz-lm-1.7B",
@@ -287,8 +300,8 @@ GPU_TIER_CONFIGS = {
         # With CPU offload, LM is offloaded after inference → DiT batch has full 16GB budget.
         "max_duration_with_lm": 600,  # 8 minutes
         "max_duration_without_lm": 600,  # 10 minutes (max supported)
-        "max_batch_size_with_lm": 1,
-        "max_batch_size_without_lm": 1,
+        "max_batch_size_with_lm": 8,
+        "max_batch_size_without_lm": 8,
         "init_lm_default": True,
         "available_lm_models": ["acestep-5Hz-lm-0.6B", "acestep-5Hz-lm-1.7B", "acestep-5Hz-lm-4B"],
         "recommended_lm_model": "acestep-5Hz-lm-1.7B",
@@ -305,8 +318,8 @@ GPU_TIER_CONFIGS = {
         # Remaining ~12-16GB easily fits batch=8. VAE decode is batch-sequential.
         "max_duration_with_lm": 600,  # 8 minutes
         "max_duration_without_lm": 600,  # 8 minutes
-        "max_batch_size_with_lm": 1,
-        "max_batch_size_without_lm": 1,
+        "max_batch_size_with_lm": 8,
+        "max_batch_size_without_lm": 8,
         "init_lm_default": True,
         "available_lm_models": [
             "acestep-5Hz-lm-0.6B",
@@ -325,8 +338,8 @@ GPU_TIER_CONFIGS = {
     "unlimited": {  # >= 24GB
         "max_duration_with_lm": 600,  # 10 minutes (max supported)
         "max_duration_without_lm": 600,  # 10 minutes
-        "max_batch_size_with_lm": 1,
-        "max_batch_size_without_lm": 1,
+        "max_batch_size_with_lm": 8,
+        "max_batch_size_without_lm": 8,
         "init_lm_default": True,
         "available_lm_models": [
             "acestep-5Hz-lm-0.6B",

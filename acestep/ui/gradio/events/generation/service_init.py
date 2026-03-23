@@ -14,7 +14,35 @@ from acestep.gpu_config import (
     get_global_gpu_config, is_lm_model_size_allowed, find_best_lm_model_on_disk,
     get_gpu_config_for_tier, set_global_gpu_config, GPU_TIER_LABELS, GPU_TIER_CONFIGS,
 )
-from .model_config import is_pure_base_model, get_model_type_ui_settings
+from .model_config import is_pure_base_model, is_sft_model, get_model_type_ui_settings
+
+
+def _select_quantization_value(
+    *,
+    quantization_enabled: bool,
+    device: str,
+) -> str | None:
+    """Return the DiT quantization mode selected for the current UI state."""
+    quant_value = "int8_weight_only" if quantization_enabled else None
+    if not quantization_enabled or device not in {"auto", "cuda"}:
+        return quant_value
+
+    try:
+        import torch
+    except ImportError:
+        return quant_value
+
+    try:
+        if torch.cuda.is_available():
+            major, _ = torch.cuda.get_device_capability(0)
+            if major < 7:
+                logger.info(
+                    "Pre-Ampere CUDA detected: using w8a8_dynamic quantization for stability"
+                )
+                return "w8a8_dynamic"
+    except Exception:
+        return quant_value
+    return quant_value
 
 
 def refresh_checkpoints(dit_handler):
@@ -38,7 +66,10 @@ def init_service_wrapper(
         current_batch_size: Current batch size value from UI to preserve
             after reinitialization (optional).
     """
-    quant_value = "int8_weight_only" if quantization else None
+    quant_value = _select_quantization_value(
+        quantization_enabled=quantization,
+        device=device,
+    )
 
     gpu_config = get_global_gpu_config()
 
@@ -114,9 +145,13 @@ def init_service_wrapper(
     accordion_state = gr.Accordion(open=not is_model_initialized)
 
     is_turbo = dit_handler.is_turbo_model()
-    is_pure_base = is_pure_base_model((config_path or "").lower())
+    config_path_lower = (config_path or "").lower()
+    is_pure_base = is_pure_base_model(config_path_lower)
+    # Match interactive path — SFT models need 50-step default here too.
+    is_sft = is_sft_model(config_path_lower)
     model_type_settings = get_model_type_ui_settings(
         is_turbo, current_mode=current_mode, is_pure_base=is_pure_base,
+        is_sft=is_sft,
     )
 
     gpu_config = get_global_gpu_config()

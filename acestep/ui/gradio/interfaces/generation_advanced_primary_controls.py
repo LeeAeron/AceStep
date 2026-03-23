@@ -23,6 +23,7 @@ def build_lora_controls() -> dict[str, Any]:
                 label=t("generation.lora_path_label"),
                 placeholder=t("generation.lora_path_placeholder"),
                 info=t("generation.lora_path_info"),
+                elem_classes=["has-info-container"],
                 scale=3,
             )
             load_lora_btn = gr.Button(t("generation.load_lora_btn"), variant="secondary", scale=1)
@@ -33,6 +34,7 @@ def build_lora_controls() -> dict[str, Any]:
                 value=False,
                 info=t("generation.use_lora_info"),
                 scale=1,
+                elem_classes=["has-info-container"],
             )
             lora_scale_slider = gr.Slider(
                 minimum=0.0,
@@ -41,15 +43,18 @@ def build_lora_controls() -> dict[str, Any]:
                 step=0.05,
                 label=t("generation.lora_scale_label"),
                 info=t("generation.lora_scale_info"),
+                elem_classes=["has-info-container"],
                 scale=2,
             )
-        lora_status = gr.Textbox(
-            label=t("generation.lora_status_label"),
-            value=t("generation.lora_status_default"),
-            interactive=False,
-            lines=1,
-            elem_classes=["no-tooltip"],
-        )
+        with gr.Row():
+            lora_status = gr.HTML(
+                value=f"""
+                <div class="status-box">
+                    <pre>{t("generation.lora_status_default")}</pre>
+                </div>
+                """,
+                elem_classes=["no-tooltip"],
+            )
     return {
         "lora_path": lora_path,
         "load_lora_btn": load_lora_btn,
@@ -143,6 +148,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 info=t("generation.constrained_debug_info"),
                 scale=1,
                 interactive=not service_mode,
+                elem_classes=["has-info-container"],
             )
         with gr.Row():
             allow_lm_batch = gr.Checkbox(

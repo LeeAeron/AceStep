@@ -12,6 +12,39 @@ import torch
 from loguru import logger
 
 from acestep.constants import DEFAULT_DIT_INSTRUCTION
+from acestep.core.generation.handler.repaint_waveform_splice import (
+    apply_repaint_waveform_splice,
+)
+from acestep.gpu_config import (
+    DIT_INFERENCE_VRAM_PER_BATCH,
+    VRAM_SAFETY_MARGIN_GB,
+    get_effective_free_vram_gb,
+)
+
+
+def _resolve_repaint_config(
+    mode: str = "balanced",
+    strength: float = 0.5,
+) -> tuple:
+    """Convert repaint mode and strength into concrete numeric parameters.
+
+    Higher *strength* means more aggressive repainting (less source preservation).
+
+    Args:
+        mode: One of ``"conservative"``, ``"balanced"``, or ``"aggressive"``.
+        strength: 0.0 = conservative (max preservation), 1.0 = aggressive
+            (pure diffusion).  Only effective in balanced mode.
+
+    Returns:
+        Tuple of ``(injection_ratio, crossfade_frames, wav_crossfade_sec)``.
+    """
+    strength = max(0.0, min(1.0, strength))
+    if mode == "aggressive":
+        return 0.0, 0, 0.0
+    if mode == "conservative":
+        return 1.0, 25, 0.05
+    inv = 1.0 - strength
+    return inv, round(25 * inv), 0.05 * inv
 
 
 class GenerateMusicMixin:
@@ -20,6 +53,72 @@ class GenerateMusicMixin:
     The host class is expected to implement helper methods invoked by this
     orchestration flow.
     """
+
+    def _vram_preflight_check(
+        self,
+        actual_batch_size: int,
+        audio_duration: Optional[float],
+        guidance_scale: float,
+    ) -> Optional[Dict[str, Any]]:
+        """Check free VRAM headroom before attempting service_generate.
+
+        Model weights are already resident in GPU memory at this point.  We
+        only need to verify there is enough room for the diffusion-pass
+        activations (intermediate attention maps, FFN buffers, noise tensors)
+        plus a project-standard safety margin.
+
+        Args:
+            actual_batch_size: Number of samples being generated.
+            audio_duration: Requested audio length in seconds, or None for default.
+            guidance_scale: CFG guidance value; values > 1.0 indicate CFG is active
+                and the DiT runs two forward passes per step (doubling activation memory).
+
+        Returns:
+            An error payload dict when VRAM is insufficient, or None when the
+            check passes or no CUDA device is present (CPU/MPS/XPU fall through).
+        """
+        if not torch.cuda.is_available():
+            return None
+
+        if getattr(self, "offload_to_cpu", False):
+            logger.debug(
+                "[generate_music] VRAM pre-flight: skipping check "
+                "(offload_to_cpu=True, models loaded one-at-a-time)"
+            )
+            return None
+
+        duration_s = audio_duration or 60.0
+        # CFG doubles forward-pass memory: two DiT evaluations per step.
+        dit_key = "base" if guidance_scale > 1.0 else "turbo"
+        per_batch_gb = DIT_INFERENCE_VRAM_PER_BATCH.get(dit_key, 0.6)
+        # Longer audio = more latent frames (5 Hz rate) = more memory.
+        duration_factor = max(1.0, duration_s / 60.0)
+        needed_gb = per_batch_gb * actual_batch_size * duration_factor + VRAM_SAFETY_MARGIN_GB
+
+        free_gb = get_effective_free_vram_gb()
+        logger.info(
+            "[generate_music] VRAM pre-flight: {:.2f} GB free, ~{:.2f} GB needed "
+            "(batch={}, duration={:.0f}s, mode={}).",
+            free_gb, needed_gb, actual_batch_size, duration_s, dit_key,
+        )
+
+        if free_gb >= needed_gb:
+            return None
+
+        msg = (
+            f"Insufficient free VRAM: need ~{needed_gb:.1f} GB, "
+            f"only {free_gb:.1f} GB available. "
+            f"Reduce batch size (currently {actual_batch_size}) "
+            f"or audio duration (currently {duration_s:.0f}s)."
+        )
+        logger.warning("[generate_music] VRAM pre-flight failed: {}", msg)
+        return {
+            "audios": [],
+            "status_message": f"Error: {msg}",
+            "extra_outputs": {},
+            "success": False,
+            "error": msg,
+        }
 
     def generate_music(
         self,
@@ -55,6 +154,10 @@ class GenerateMusicMixin:
         latent_shift: float = 0.0,
         latent_rescale: float = 1.0,
         chunk_mask_mode: str = "auto",
+        repaint_latent_crossfade_frames: int = 10,
+        repaint_wav_crossfade_sec: float = 0.0,
+        repaint_mode: str = "balanced",
+        repaint_strength: float = 0.5,
         progress=None,
     ) -> Dict[str, Any]:
         """Generate audio from text/reference inputs and return response payload.
@@ -140,6 +243,18 @@ class GenerateMusicMixin:
                 repainting_end=repainting_end,
                 chunk_mask_mode=chunk_mask_mode,
             )
+            vram_error = self._vram_preflight_check(
+                actual_batch_size=actual_batch_size,
+                audio_duration=audio_duration,
+                guidance_scale=guidance_scale,
+            )
+            if vram_error is not None:
+                return vram_error
+
+            injection_ratio, resolved_cf_frames, resolved_wav_cf = (
+                _resolve_repaint_config(repaint_mode, repaint_strength)
+            )
+
             service_run = self._run_generate_music_service_with_progress(
                 progress=progress,
                 actual_batch_size=actual_batch_size,
@@ -157,6 +272,8 @@ class GenerateMusicMixin:
                 cfg_interval_end=cfg_interval_end,
                 shift=shift,
                 infer_method=infer_method,
+                repaint_crossfade_frames=resolved_cf_frames,
+                repaint_injection_ratio=injection_ratio,
             )
             outputs = service_run["outputs"]
             infer_steps_for_progress = service_run["infer_steps_for_progress"]
@@ -175,6 +292,22 @@ class GenerateMusicMixin:
                 use_tiled_decode=use_tiled_decode,
                 time_costs=time_costs,
             )
+            repainting_start_batch = service_inputs.get("repainting_start_batch")
+            repainting_end_batch = service_inputs.get("repainting_end_batch")
+            do_wav_splice = (
+                repaint_mode != "aggressive"
+                and repainting_start_batch is not None
+                and repainting_end_batch is not None
+            )
+            if do_wav_splice:
+                pred_wavs = apply_repaint_waveform_splice(
+                    pred_wavs=pred_wavs,
+                    src_wavs=service_inputs["target_wavs_tensor"],
+                    repainting_starts=repainting_start_batch,
+                    repainting_ends=repainting_end_batch,
+                    sample_rate=self.sample_rate,
+                    crossfade_duration=resolved_wav_cf,
+                )
             result = self._build_generate_music_success_payload(
                 outputs=outputs,
                 pred_wavs=pred_wavs,

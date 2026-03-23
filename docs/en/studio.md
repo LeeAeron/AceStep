@@ -8,6 +8,9 @@ This UI:
 - Talks to the same REST API (`/release_task`, `/query_result`)
 - Does not change model behavior
 
+For the plugin-oriented contract and status mapping, see
+[VST3 Backend Contract](./VST3_BACKEND_CONTRACT.md).
+
 ## How to use
 
 1. Start the ACE-Step API server (e.g. `uv run acestep --enable-api --port 8001` or your usual API launch command).

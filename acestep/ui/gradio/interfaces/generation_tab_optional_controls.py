@@ -28,7 +28,7 @@ def build_optional_parameter_controls(
 
     with gr.Accordion(
         t("generation.optional_params"),
-        open=False,
+        open=True,
         visible=True,
         elem_classes=["has-info-container"],
     ) as optional_params_accordion:
@@ -106,7 +106,7 @@ def build_optional_parameter_controls(
             )
             batch_size_input = gr.Number(
                 label=t("generation.batch_size_label"),
-                value=default_batch_size,
+                value=1,
                 minimum=1,
                 maximum=max_batch_size,
                 step=1,
